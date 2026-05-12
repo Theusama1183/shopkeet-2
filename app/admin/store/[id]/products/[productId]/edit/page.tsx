@@ -1,0 +1,13 @@
+"use client";
+
+import { use } from "react";
+import { ProductForm } from "@/components/products/ProductForm";
+
+export default function EditProductPage({
+  params,
+}: {
+  params: Promise<{ id: string; productId: string }>;
+}) {
+  const { id: storeId, productId } = use(params);
+  return <ProductForm storeId={storeId} productId={productId} mode="edit" />;
+}

@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1769894767989,
+      "tag": "0000_huge_firedrake",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770142656691,
+      "tag": "0001_far_darkhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770142892560,
+      "tag": "0002_red_mauler",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778057101437,
+      "tag": "0003_conscious_zzzax",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778091243238,
+      "tag": "0004_rich_silver_samurai",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778421143709,
+      "tag": "0005_abnormal_the_santerians",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778480854821,
+      "tag": "0006_flawless_sue_storm",
+      "breakpoints": true
+    }
+  ]
+}

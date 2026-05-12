@@ -1,0 +1,56 @@
+@import "tailwindcss";
+@import "../node_modules/tw-animate-css/dist/tw-animate.css";
+
+
+@theme {
+  /* --- Brand Colors --- */
+  --color-accent: var(--color-violet-500);
+  --color-secondary: var(--color-violet-200);
+  --color-background: var(--color-zinc-100);
+  --color-border-base: var(--color-slate-200);
+
+  /* --- Typography --- */
+  --font-heading: "IBM Plex Sans Condensed", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  /* --- Custom Animations --- */
+  --animate-blur-in: blur-in 0.6s var(--ease-in) forwards;
+
+  @keyframes blur-in {
+    from {
+      filter: blur(12px);
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      filter: blur(0);
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* --- Base Styles --- */
+@layer base {
+  body {
+    @apply bg-background text-zinc-900 font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold uppercase tracking-tight;
+  }
+}
+
+/* --- Utility for Word-by-Word Animation --- */
+@layer utilities {
+  .animate-word {
+    display: inline-block;
+    opacity: 0;
+    animation: blur-in 0.6s ease-in forwards;
+  }
+
+  /* Staggering the words manually or via JS */
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+}
