@@ -115,7 +115,7 @@ export function CollectionForm({ storeId, collectionId, mode }: CollectionFormPr
       );
 
       if (mode === "create") {
-        router.push(`/admin/store/${storeId}/collections`);
+        router.push(`/store/${storeId}/collections`);
       }
     } catch (error: any) {
       setError(error.message ?? "Failed to save");
@@ -139,7 +139,7 @@ export function CollectionForm({ storeId, collectionId, mode }: CollectionFormPr
       <div className="sticky top-0 z-10 bg-zinc-50 border-b border-zinc-200 -mx-6 px-6 py-3 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
-            href={`/admin/store/${storeId}/collections`}
+            href={`/store/${storeId}/collections`}
             className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />

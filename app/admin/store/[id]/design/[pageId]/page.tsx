@@ -60,10 +60,10 @@ function DesignPageContent({
           setPage(data);
           latestData.current = data.content;
         } else {
-          router.push(`/admin/store/${storeId}/pages`);
+          router.push(`/store/${storeId}/pages`);
         }
       } catch {
-        router.push(`/admin/store/${storeId}/pages`);
+        router.push(`/store/${storeId}/pages`);
       } finally {
         setIsLoading(false);
       }
@@ -137,7 +137,7 @@ function DesignPageContent({
       <div className="h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <p className="text-zinc-900 font-semibold mb-2">Page not found</p>
-          <Link href={`/admin/store/${storeId}/pages`}>
+          <Link href={`/store/${storeId}/pages`}>
             <Button size="sm" variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Pages
@@ -154,7 +154,7 @@ function DesignPageContent({
       <header className="h-12 bg-white border-b border-zinc-200 flex items-center justify-between px-4 shrink-0 z-50">
         {/* Left */}
         <div className="flex items-center gap-3">
-          <Link href={`/admin/store/${storeId}/pages`}>
+          <Link href={`/store/${storeId}/pages`}>
             <button className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
               <ArrowLeft className="w-4 h-4" />
               Pages

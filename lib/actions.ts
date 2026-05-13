@@ -1,11 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getAnonDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
+import { getAnonDatabase } from "@/lib/supabase/database";
 import { validateStoreInput, validateSubdomain } from "@/lib/validations/store";
 import { checkStoreCreationRateLimit } from "@/lib/auth/rate-limit";
-import { logAuditEvent } from "@/lib/audit/logger";
-import type { Database } from "@/types/supabase";
+import { createStoreCore } from "@/lib/stores/service";
 
 export async function checkSubdomain(subdomain: string) {
   // Note: This function is intentionally public (no auth required)
@@ -83,52 +82,15 @@ export async function createStore(_prevState: any, formData: FormData) {
       return { error: "Subdomain is not available" };
     }
 
-    // Use service role database to bypass RLS for user creation
-    const db = getServiceRoleDatabase();
-
-    // Ensure user exists in public.users table (FK constraint)
-    const { error: userError } = await db
-      .from('users')
-      .upsert({
-        id: user.id,
-        email: user.email!,
-        name: user.user_metadata?.full_name || user.email?.split("@")[0] || 'User',
-        image: user.user_metadata?.avatar_url || null,
-      } as any, {
-        onConflict: 'id',
-        ignoreDuplicates: true,
-      });
-
-    if (userError) {
-      console.error('[store-create] Failed to upsert user:', userError);
-      // Continue anyway - user might already exist
-    }
-
-    // Create store
-    const { data: response, error: storeError } = await db
-      .from('stores')
-      .insert({
-        name,
-        subdomain,
-        description: description || null,
-        user_id: user.id,
-      } as any)
-      .select()
-      .single();
-
-    if (storeError || !response) {
-      throw storeError || new Error('Failed to create store');
-    }
-
-    const newStore = response as Database['public']['Tables']['stores']['Row'];
-
-    // Log audit event (fire-and-forget)
-    logAuditEvent({
+    // Use central service
+    const newStore = await createStoreCore({
       userId: user.id,
-      action: "store.created",
-      resource: "store",
-      resourceId: newStore.id,
-      metadata: { subdomain, name },
+      userEmail: user.email!,
+      userName: user.user_metadata?.full_name,
+      userImage: user.user_metadata?.avatar_url,
+      name,
+      subdomain,
+      description
     });
 
     return { success: true, subdomain: newStore.subdomain };

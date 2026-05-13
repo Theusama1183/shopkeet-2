@@ -13,19 +13,19 @@ const FILE_SIGNATURES: Record<string, number[][]> = {
     [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], // PNG
   ],
   'image/webp': [
-    [0x52, 0x49, 0x46, 0x46], // RIFF (WebP container)
+    [0x52, 0x49, 0x46, 0x46, -1, -1, -1, -1, 0x57, 0x45, 0x42, 0x50], // RIFF....WEBP
   ],
   'image/gif': [
     [0x47, 0x49, 0x46, 0x38, 0x37, 0x61], // GIF87a
     [0x47, 0x49, 0x46, 0x38, 0x39, 0x61], // GIF89a
   ],
   'image/avif': [
-    [0x00, 0x00, 0x00], // AVIF (partial signature)
+    [-1, -1, -1, -1, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66], // ftypavif
   ],
   
   // Videos
   'video/mp4': [
-    [0x00, 0x00, 0x00], // MP4 (ftyp box)
+    [-1, -1, -1, -1, 0x66, 0x74, 0x79, 0x70], // ftyp
   ],
   'video/webm': [
     [0x1A, 0x45, 0xDF, 0xA3], // WebM (EBML)
@@ -75,6 +75,7 @@ function matchesSignature(bytes: Uint8Array, signature: number[]): boolean {
   if (bytes.length < signature.length) return false;
   
   for (let i = 0; i < signature.length; i++) {
+    if (signature[i] === -1) continue;
     if (bytes[i] !== signature[i]) return false;
   }
   

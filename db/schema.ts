@@ -7,6 +7,8 @@ import {
   boolean,
   jsonb,
   index,
+  primaryKey,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -210,6 +212,7 @@ export const productTags = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
+    primaryKey({ columns: [table.productId, table.tagId] }),
     index("product_tags_product_id_idx").on(table.productId),
     index("product_tags_tag_id_idx").on(table.tagId),
   ]
@@ -235,6 +238,7 @@ export const inventory = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdateFn(() => new Date()),
   },
   (table) => [
+    unique("inventory_product_store_unique").on(table.productId, table.storeId),
     index("inventory_product_id_idx").on(table.productId),
     index("inventory_store_id_idx").on(table.storeId),
     index("inventory_quantity_idx").on(table.quantity),
@@ -379,11 +383,13 @@ export const auditLogs = pgTable(
     action: text("action").notNull(),
     resource: text("resource").notNull(),
     resourceId: text("resource_id").notNull(),
+    storeId: uuid("store_id").references(() => stores.id, { onDelete: "cascade" }),
     metadata: jsonb("metadata"),
     timestamp: timestamp("timestamp").defaultNow().notNull(),
   },
   (table) => [
     index("audit_logs_user_id_idx").on(table.userId),
+    index("audit_logs_store_id_idx").on(table.storeId),
     index("audit_logs_timestamp_idx").on(table.timestamp),
     index("audit_logs_action_idx").on(table.action),
     index("audit_logs_resource_id_idx").on(table.resourceId),

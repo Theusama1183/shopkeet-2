@@ -6,6 +6,7 @@ import { updateProductSchema } from "@/lib/validations/product";
 import { cacheDeletePattern } from "@/lib/redis";
 import { invalidateTags } from "@/lib/cache-helpers";
 import { inngest } from "@/lib/inngest/client";
+import { withCSRFProtection } from "@/lib/security/csrf";
 
 // GET /api/products/[id] - Get single product
 export async function GET(
@@ -45,10 +46,10 @@ export async function GET(
 }
 
 // PATCH /api/products/[id] - Update product
-export async function PATCH(
+export const PATCH = withCSRFProtection(async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     const supabase = await createClient();
@@ -141,13 +142,13 @@ export async function PATCH(
     console.error("Error updating product:", error);
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
   }
-}
+});
 
 // DELETE /api/products/[id] - Soft delete product
-export async function DELETE(
+export const DELETE = withCSRFProtection(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     const supabase = await createClient();
@@ -211,4 +212,4 @@ export async function DELETE(
     console.error("Error deleting product:", error);
     return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
   }
-}
+});

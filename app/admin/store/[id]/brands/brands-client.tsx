@@ -144,7 +144,7 @@ export function BrandsTable({ storeId }: { storeId: string }) {
             <Download className="w-4 h-4" />
             Export
           </button>
-          <Link href={`/admin/store/${storeId}/brands/new`}>
+          <Link href={`/store/${storeId}/brands/new`}>
             <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors">
               <Plus className="w-4 h-4" />
               Add brand
@@ -161,7 +161,7 @@ export function BrandsTable({ storeId }: { storeId: string }) {
         filters={filters}
         searchPlaceholder="Search brands..."
         getRowId={(item) => String((item as Brand).id)}
-        onRowClick={(item) => router.push(`/admin/store/${storeId}/brands/${(item as Brand).id}/edit`)}
+        onRowClick={(item) => router.push(`/store/${storeId}/brands/${(item as Brand).id}/edit`)}
         builtinBulkActions={{
           onBulkDelete: async (items) => {
             if (!confirm(`Delete ${items.length} brands?`)) return;
@@ -177,7 +177,7 @@ export function BrandsTable({ storeId }: { storeId: string }) {
           const b = item as Brand;
           return (
             <div className="flex items-center gap-1">
-              <Link href={`/admin/store/${storeId}/brands/${b.id}/edit`} onClick={(e) => e.stopPropagation()}>
+              <Link href={`/store/${storeId}/brands/${b.id}/edit`} onClick={(e) => e.stopPropagation()}>
                 <button className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors" title="Edit">
                   <Edit className="w-4 h-4" />
                 </button>
@@ -204,7 +204,7 @@ export function BrandsTable({ storeId }: { storeId: string }) {
               <p className="text-sm font-medium text-zinc-700">No brands yet</p>
               <p className="text-xs text-zinc-400 mt-1">Add brands to organize your products</p>
             </div>
-            <Link href={`/admin/store/${storeId}/brands/new`}>
+            <Link href={`/store/${storeId}/brands/new`}>
               <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors">
                 <Plus className="w-4 h-4" />
                 Add brand

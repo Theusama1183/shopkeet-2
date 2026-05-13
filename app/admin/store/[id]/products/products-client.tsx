@@ -144,7 +144,7 @@ export function ProductsTable({ storeId }: { storeId: string }) {
             <Download className="w-4 h-4" />
             Export
           </button>
-          <Link href={`/admin/store/${storeId}/products/new`}>
+          <Link href={`/store/${storeId}/products/new`}>
             <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors">
               <Plus className="w-4 h-4" />
               Add product
@@ -162,7 +162,7 @@ export function ProductsTable({ storeId }: { storeId: string }) {
         filters={filters}
         searchPlaceholder="Search products..."
         getRowId={(item) => String((item as Product).id)}
-        onRowClick={(item) => router.push(`/admin/store/${storeId}/products/${(item as Product).id}/edit`)}
+        onRowClick={(item) => router.push(`/store/${storeId}/products/${(item as Product).id}/edit`)}
         builtinBulkActions={{
           onBulkDelete: async (items) => {
             if (!confirm(`Delete ${items.length} products?`)) return;
@@ -178,7 +178,7 @@ export function ProductsTable({ storeId }: { storeId: string }) {
           const p = item as Product;
           return (
             <div className="flex items-center gap-1">
-              <Link href={`/admin/store/${storeId}/products/${p.id}/edit`} onClick={(e) => e.stopPropagation()}>
+              <Link href={`/store/${storeId}/products/${p.id}/edit`} onClick={(e) => e.stopPropagation()}>
                 <button className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors" title="Edit">
                   <Edit className="w-4 h-4" />
                 </button>
@@ -205,7 +205,7 @@ export function ProductsTable({ storeId }: { storeId: string }) {
               <p className="text-sm font-medium text-zinc-700">No products yet</p>
               <p className="text-xs text-zinc-400 mt-1">Add your first product to start selling</p>
             </div>
-            <Link href={`/admin/store/${storeId}/products/new`}>
+            <Link href={`/store/${storeId}/products/new`}>
               <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors">
                 <Plus className="w-4 h-4" />
                 Add product

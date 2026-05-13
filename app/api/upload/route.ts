@@ -30,7 +30,9 @@ const ALLOWED_TYPES = new Set([
 
 const MAX_SIZE_MB = 50;
 
-export async function POST(req: NextRequest) {
+import { withCSRFProtection } from "@/lib/security/csrf";
+
+export const POST = withCSRFProtection(async (req: NextRequest) => {
   try {
     // ── Env validation ──────────────────────────────────────────────────────
     const requiredEnv = ['R2_ENDPOINT', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET_NAME', 'R2_PUBLIC_URL'] as const;
@@ -105,7 +107,16 @@ export async function POST(req: NextRequest) {
       }
 
       // ── Build key with sanitized filename ──────────────────────────────────
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+      const extMap: Record<string, string> = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/webp': 'webp',
+        'image/gif': 'gif',
+        'image/avif': 'avif',
+        'video/mp4': 'mp4',
+        'video/webm': 'webm',
+      };
+      const ext = typeValidation.detectedType ? extMap[typeValidation.detectedType] : "bin";
       const sanitizedName = sanitizeFilename(file.name);
       const key = `${folder}/${user.id}/${nanoid(12)}.${ext}`;
 
@@ -160,4 +171,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

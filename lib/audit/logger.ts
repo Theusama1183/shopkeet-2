@@ -13,6 +13,7 @@ export interface AuditEvent {
   action: string;
   resource: string;
   resourceId: string;
+  storeId?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -40,9 +41,11 @@ async function _writeAuditLog(event: AuditEvent): Promise<void> {
       action: event.action,
       resource: event.resource,
       resource_id: event.resourceId,
-      metadata: event.metadata ?? {},
+      // @ts-ignore - store_id not yet in types/supabase.ts
+      store_id: event.storeId ?? null,
+      metadata: (event.metadata as any) ?? {},
       timestamp: new Date().toISOString(),
-    } as any);
+    });
 
   if (error) {
     console.error('[audit] Failed to write log:', error);
@@ -101,21 +104,15 @@ export async function getAuditLogs(filters: {
     if (filters.action) {
       query = query.eq('action', filters.action);
     }
+    if (filters.storeId) {
+      query = query.eq('store_id', filters.storeId);
+    }
 
     const { data, error } = await query;
 
     if (error) {
       console.error("[audit] Failed to fetch logs:", error);
       return [];
-    }
-
-    // Filter by storeId in application layer if provided
-    // TODO: Add storeId column to audit_logs table for better performance
-    if (filters.storeId && data) {
-      return data.filter((log: any) => {
-        const metadata = log.metadata as Record<string, unknown> | null;
-        return metadata?.storeId === filters.storeId;
-      });
     }
 
     return data || [];

@@ -57,7 +57,7 @@ export default function NewPagePage({ params }: { params: Promise<{ id: string }
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Now redirect to design page
-      router.push(`/admin/store/${storeId}/design/${newPage.id}`);
+      router.push(`/store/${storeId}/design/${newPage.id}`);
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
@@ -73,7 +73,7 @@ export default function NewPagePage({ params }: { params: Promise<{ id: string }
       {/* Header */}
       <div className="flex items-center justify-between pb-5">
         <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <Link href={`/admin/store/${storeId}/pages`} className="hover:text-zinc-900 transition-colors flex items-center gap-1">
+          <Link href={`/store/${storeId}/pages`} className="hover:text-zinc-900 transition-colors flex items-center gap-1">
             <ArrowLeft className="w-4 h-4" />
             Pages
           </Link>
@@ -81,7 +81,7 @@ export default function NewPagePage({ params }: { params: Promise<{ id: string }
           <span className="text-zinc-900 font-medium">Add page</span>
         </div>
         <div className="flex items-center gap-2">
-          <Link href={`/admin/store/${storeId}/pages`}>
+          <Link href={`/store/${storeId}/pages`}>
             <button className="px-4 py-2 text-sm font-medium text-zinc-700 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
               Discard
             </button>

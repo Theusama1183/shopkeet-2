@@ -14,14 +14,14 @@ export async function GET() {
     );
   }
 
-  // Optional: Add role-based authorization for admin-only access
-  // const userRole = user.user_metadata?.role;
-  // if (userRole !== 'admin') {
-  //   return NextResponse.json(
-  //     { error: "Forbidden - admin access required" },
-  //     { status: 403 }
-  //   );
-  // }
+  // Role-based authorization for admin-only access
+  const userRole = user.user_metadata?.role;
+  if (userRole !== 'admin') {
+    return NextResponse.json(
+      { error: "Forbidden - admin access required" },
+      { status: 403 }
+    );
+  }
 
   const monitor = PerformanceMonitor.getInstance();
   const stats = monitor.getAllStats();
