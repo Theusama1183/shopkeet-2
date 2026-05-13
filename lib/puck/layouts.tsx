@@ -53,7 +53,7 @@ export function getLayoutTemplate(layoutId: string): Data {
         },
         {
           type: "CountdownBlock",
-          props: { id: "countdown-1", title: "Limited Time Offer", targetDate: "2024-12-31 23:59", bgColor: "#7c3aed", textColor: "#ffffff", showDays: true, showHours: true, showMinutes: true, showSeconds: true },
+          props: { id: "countdown-1", title: "Limited Time Offer", targetDate: "2026-12-31 23:59", bgColor: "#7c3aed", textColor: "#ffffff", showDays: true, showHours: true, showMinutes: true, showSeconds: true },
         },
         {
           type: "CategoryGrid",

@@ -50,10 +50,9 @@ export const onTemplateActivated = inngest.createFunction(
     // Step 1: Deactivate other templates of same type
     await step.run("deactivate-others", async () => {
       const db = getServiceRoleDatabase();
-      
       const { error } = await db
         .from('templates')
-        .update({ is_active: false, updated_at: new Date().toISOString() } as any)
+        .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('store_id', storeId)
         .eq('type', type)
         .neq('id', templateId);

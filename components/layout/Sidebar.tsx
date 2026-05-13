@@ -500,7 +500,7 @@ export function Sidebar({
   isMobile = false,
   storeName = "My Store",
 }: SidebarProps) {
-  const base = `/store/${storeId}`;
+  const base = `/admin/store/${storeId}`;
   const [openGroupId, setOpenGroupId] = useState<string | null>(null);
 
   const handleToggleGroup = useCallback(

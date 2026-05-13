@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLoadingStore } from '@/lib/stores';
-import { useEffect } from 'react';
+import { useQueryLoading } from './use-query-loading';
 
 // Query keys
 export const templateKeys = {
@@ -142,48 +141,26 @@ async function activateTemplateApi(
 
 // Hooks
 export function useTemplates(storeId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: templateKeys.list(storeId),
     queryFn: () => fetchTemplates(storeId),
     enabled: !!storeId,
-    staleTime: 1000 * 60 * 3, // 3 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 3,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`templates-${storeId}`);
-    } else {
-      stopLoading(`templates-${storeId}`);
-    }
-    return () => stopLoading(`templates-${storeId}`);
-  }, [query.isLoading, storeId, startLoading, stopLoading]);
-  
+  useQueryLoading(`templates-${storeId}`, query.isLoading);
   return query;
 }
 
 export function useTemplate(storeId: string, templateId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: templateKeys.detail(templateId),
     queryFn: () => fetchTemplate(storeId, templateId),
     enabled: !!storeId && !!templateId,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`template-${templateId}`);
-    } else {
-      stopLoading(`template-${templateId}`);
-    }
-    return () => stopLoading(`template-${templateId}`);
-  }, [query.isLoading, templateId, startLoading, stopLoading]);
-  
+  useQueryLoading(`template-${templateId}`, query.isLoading);
   return query;
 }
 

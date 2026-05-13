@@ -11,15 +11,11 @@ interface TopbarProps {
 }
 
 export function Topbar({
-  isCollapsed,
   onToggleSidebar,
   isMobile = false,
 }: TopbarProps) {
   return (
-    <header
-      className="sticky top-0 z-30 h-14 bg-white border-b border-zinc-200 flex items-center px-5 gap-4"
-      style={{ marginLeft: isMobile ? 0 : isCollapsed ? 72 : 0, transition: "margin-left 0.3s ease" }}
-    >
+    <header className="sticky top-0 z-30 h-14 bg-white border-b border-zinc-200 flex items-center px-5 gap-4">
       {/* Mobile toggle */}
       {isMobile && (
         <button onClick={onToggleSidebar} className="p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 lg:hidden">
@@ -53,11 +49,4 @@ export function Topbar({
   );
 }
 
-interface TopbarProps {
-  storeName: string;
-  storeSubdomain: string;
-  isCollapsed: boolean;
-  onToggleSidebar: () => void;
-  isMobile?: boolean;
-}
 

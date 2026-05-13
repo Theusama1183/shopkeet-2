@@ -45,12 +45,12 @@ async function getInventory(storeId: string) {
 
     return (data || []).map((i: InventoryItem) => ({
       id: i.id,
-      productId: i.product_id,
+      product_id: i.product_id,
       quantity: i.quantity,
-      lowStockThreshold: i.low_stock_threshold,
-      trackInventory: i.track_inventory,
-      allowBackorder: i.allow_backorder,
-      updatedAt: i.updated_at,
+      low_stock_threshold: i.low_stock_threshold,
+      track_inventory: i.track_inventory,
+      allow_backorder: i.allow_backorder,
+      updated_at: i.updated_at,
       product: i.products ? {
         id: i.products.id,
         name: i.products.name,

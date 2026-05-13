@@ -39,7 +39,7 @@ export const createClient = cache(async () => {
       cookieOptions: {
         domain: cookieDomain,
         path: "/",
-        sameSite: "strict",
+        sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
         maxAge: 60 * 60 * 24 * 7, // 7 days

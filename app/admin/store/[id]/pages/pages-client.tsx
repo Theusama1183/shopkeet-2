@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Column, FilterField, DataTableProps } from "@/components/ui/data-table";
 import { Plus, Edit, Eye, Trash2, Home, FileText, Palette } from "lucide-react";
@@ -19,6 +20,7 @@ interface Store {
 }
 
 export function PagesTable({ store }: { store: Store }) {
+  const router = useRouter();
   // Use React Query hooks
   const { data: pages = [], isLoading } = usePages(store.id);
   const deletePage = useDeletePage(store.id);
@@ -116,7 +118,7 @@ export function PagesTable({ store }: { store: Store }) {
           <h1 className="text-xl font-semibold text-zinc-900">Pages</h1>
           <p className="text-sm text-zinc-500 mt-0.5">{store.name}</p>
         </div>
-        <Link href={`/store/${store.id}/pages/new`}>
+        <Link href={`/admin/store/${store.id}/pages/new`}>
           <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors">
             <Plus className="w-4 h-4" />
             Add page
@@ -146,7 +148,7 @@ export function PagesTable({ store }: { store: Store }) {
           },
         }}
         onRowClick={(item) => {
-          window.location.href = `/store/${store.id}/pages/${(item as Page).id}/edit`;
+          router.push(`/admin/store/${store.id}/pages/${(item as Page).id}/edit`);
         }}
         actions={(item) => {
           const page = item as Page;
@@ -167,7 +169,7 @@ export function PagesTable({ store }: { store: Store }) {
                   </button>
                 </a>
               )}
-              <Link href={`/store/${store.id}/pages/${page.id}/edit`} onClick={(e) => e.stopPropagation()}>
+              <Link href={`/admin/store/${store.id}/pages/${page.id}/edit`} onClick={(e) => e.stopPropagation()}>
                 <button
                   className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
                   title="Edit page"
@@ -175,7 +177,7 @@ export function PagesTable({ store }: { store: Store }) {
                   <Edit className="w-4 h-4" />
                 </button>
               </Link>
-              <Link href={`/store/${store.id}/design/${page.id}`} onClick={(e) => e.stopPropagation()}>
+              <Link href={`/admin/store/${store.id}/design/${page.id}`} onClick={(e) => e.stopPropagation()}>
                 <button
                   className="p-1.5 rounded-lg text-zinc-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
                   title="Open design editor"
@@ -202,7 +204,7 @@ export function PagesTable({ store }: { store: Store }) {
               <p className="text-sm font-medium text-zinc-700">No pages yet</p>
               <p className="text-xs text-zinc-400 mt-1">Create your first page to get started</p>
             </div>
-            <Link href={`/store/${store.id}/pages/new`}>
+            <Link href={`/admin/store/${store.id}/pages/new`}>
               <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors">
                 <Plus className="w-4 h-4" />
                 Add page

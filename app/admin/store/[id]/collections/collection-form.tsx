@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, Save, Check, AlertCircle, ImageIcon } from "lucide-react";
-import { useCreateCollection, useUpdateCollection, collectionKeys } from "@/lib/queries";
+import { useCreateCollection, useUpdateCollection, useCollection, collectionKeys } from "@/lib/queries";
 import { useNotification } from "@/lib/stores";
 
 interface CollectionFormProps {
@@ -40,31 +40,30 @@ export function CollectionForm({ storeId, collectionId, mode }: CollectionFormPr
   const createCollection = useCreateCollection(storeId);
   const updateCollection = useUpdateCollection(storeId);
   const notification = useNotification();
-  
+
+  // React Query — load existing collection in edit mode
+  const { data: existingCollection, isLoading } = useCollection(storeId, collectionId ?? "");
+
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
-  const [isLoading, setIsLoading] = useState(mode === "edit");
   const [savedOk, setSavedOk] = useState(false);
   const [error, setError] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [formInitialized, setFormInitialized] = useState(false);
 
-  // Load existing collection
+  // Populate form when collection data loads
   useEffect(() => {
-    if (mode !== "edit" || !collectionId) return;
-    fetch(`/api/stores/${storeId}/collections/${collectionId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setForm({
-          name: data.name ?? "",
-          slug: data.slug ?? "",
-          description: data.description ?? "",
-          image: data.image ?? "",
-          isActive: data.is_active ?? true,
-        });
-        setSlugEdited(!!data.slug);
-      })
-      .catch(() => router.push(`/store/${storeId}/collections`))
-      .finally(() => setIsLoading(false));
-  }, [mode, collectionId, storeId, router]);
+    if (mode === "edit" && existingCollection && !formInitialized) {
+      setForm({
+        name: existingCollection.name ?? "",
+        slug: existingCollection.slug ?? "",
+        description: existingCollection.description ?? "",
+        image: existingCollection.image ?? "",
+        isActive: existingCollection.is_active ?? true,
+      });
+      setSlugEdited(true);
+      setFormInitialized(true);
+    }
+  }, [mode, existingCollection, formInitialized]);
 
   const handleNameChange = (name: string) => {
     setForm((prev) => ({ ...prev, name }));
@@ -116,7 +115,7 @@ export function CollectionForm({ storeId, collectionId, mode }: CollectionFormPr
       );
 
       if (mode === "create") {
-        router.push(`/store/${storeId}/collections`);
+        router.push(`/admin/store/${storeId}/collections`);
       }
     } catch (error: any) {
       setError(error.message ?? "Failed to save");
@@ -140,7 +139,7 @@ export function CollectionForm({ storeId, collectionId, mode }: CollectionFormPr
       <div className="sticky top-0 z-10 bg-zinc-50 border-b border-zinc-200 -mx-6 px-6 py-3 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
-            href={`/store/${storeId}/collections`}
+            href={`/admin/store/${storeId}/collections`}
             className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />

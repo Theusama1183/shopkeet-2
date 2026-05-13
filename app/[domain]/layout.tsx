@@ -32,35 +32,42 @@ export default async function StoreLayout({
   const decodedDomain = decodeURIComponent(domain);
   const subdomain = parseSubdomain(decodedDomain);
 
-  // ── Cached store lookup — keyed per domain ────────────────────────────────
+  // ── Resolve store first (everything else depends on it) ───────────────────
   const store = await resolveStoreCached(subdomain, decodedDomain)();
 
-  // ── Nav pages — cached, limited to 10 ────────────────────────────────────
-  const pages = store ? await resolveNavPages(store.id) : [];
-
-  // ── Resolve current page ID for display conditions ────────────────────────
-  let currentPageId: string | null = null;
-  if (store) {
-    try {
-      const headersList = await headers();
-      const pathname =
-        headersList.get("x-pathname") ||
-        headersList.get("x-forwarded-uri") ||
-        "";
-      const slug = pathname.replace(/^\//, "").split("?")[0];
-      if (slug) {
-        const page = await getPageBySlug(store.id, slug);
-        if (page) currentPageId = page.id;
-      }
-    } catch {
-      // headers() may not be available in all contexts
-    }
+  if (!store) {
+    // No store found — render minimal shell so children can show not-found
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <main className="flex-1">{children}</main>
+      </div>
+    );
   }
 
-  // ── Single batched call for header + footer templates ─────────────────────
-  const { header: headerTemplate, footer: footerTemplate } = store
-    ? await getLayoutTemplates(store.id, currentPageId)
-    : { header: null, footer: null };
+  // ── Resolve pathname for display conditions ───────────────────────────────
+  let slug = "";
+  try {
+    const headersList = await headers();
+    const pathname =
+      headersList.get("x-pathname") ||
+      headersList.get("x-forwarded-uri") ||
+      "";
+    slug = pathname.replace(/^\//, "").split("?")[0];
+  } catch {
+    // headers() may not be available in all contexts
+  }
+
+  // ── Parallel fetch: nav pages + current page + templates ─────────────────
+  // All three are independent once we have storeId + slug
+  const [pages, currentPage, { header: headerTemplate, footer: footerTemplate }] =
+    await Promise.all([
+      resolveNavPages(store.id),
+      slug ? getPageBySlug(store.id, slug) : Promise.resolve(null),
+      getLayoutTemplates(store.id, null),
+    ]);
+
+  const currentPageId = currentPage?.id ?? null;
+  void currentPageId; // available for future display-condition filtering
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -71,10 +78,9 @@ export default async function StoreLayout({
         />
       ) : (
         <StorefrontHeader
-          storeName={store?.name || "Store"}
-          logo={store?.logo}
+          storeName={store.name || "Store"}
+          logo={store.logo}
           pages={pages}
-          subdomain={store?.subdomain || ""}
         />
       )}
 
@@ -87,9 +93,9 @@ export default async function StoreLayout({
         />
       ) : (
         <StorefrontFooter
-          storeName={store?.name || "Store"}
-          logo={store?.logo}
-          description={store?.description}
+          storeName={store.name || "Store"}
+          logo={store.logo}
+          description={store.description}
           pages={pages}
         />
       )}

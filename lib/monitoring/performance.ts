@@ -115,16 +115,13 @@ export function timed(_operation: string) {
 export function trackWebVitals() {
   if (typeof window === 'undefined') return;
 
-  // Track Core Web Vitals
-  import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-    getCLS(console.log);
-    getFID(console.log);
-    getFCP(console.log);
-    getLCP(console.log);
-    getTTFB(console.log);
-  }).catch(() => {
-    // web-vitals not available, skip tracking
-  });
+  import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB }) => {
+    onCLS((m) => console.debug('[vitals] CLS', m.value));
+    onFID((m) => console.debug('[vitals] FID', m.value));
+    onFCP((m) => console.debug('[vitals] FCP', m.value));
+    onLCP((m) => console.debug('[vitals] LCP', m.value));
+    onTTFB((m) => console.debug('[vitals] TTFB', m.value));
+  }).catch(() => {});
 }
 
 // Database query performance wrapper

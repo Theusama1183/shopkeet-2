@@ -32,6 +32,15 @@ const MAX_SIZE_MB = 50;
 
 export async function POST(req: NextRequest) {
   try {
+    // ── Env validation ──────────────────────────────────────────────────────
+    const requiredEnv = ['R2_ENDPOINT', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET_NAME', 'R2_PUBLIC_URL'] as const;
+    for (const key of requiredEnv) {
+      if (!process.env[key]) {
+        console.error(`[upload] Missing required env var: ${key}`);
+        return NextResponse.json({ error: "Upload service not configured" }, { status: 500 });
+      }
+    }
+
     // ── Auth ────────────────────────────────────────────────────────────────
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

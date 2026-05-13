@@ -108,9 +108,10 @@ export async function PATCH(
     updates.updated_at = new Date().toISOString();
 
     const serviceDb = getServiceRoleDatabase();
-    const { data: updatedBrand, error: updateError } = await serviceDb
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updatedBrand, error: updateError } = await (serviceDb as any)
       .from('brands')
-      .update(updates as any)
+      .update(updates)
       .eq('id', brandId)
       .eq('store_id', storeId)
       .select()
@@ -168,9 +169,10 @@ export async function DELETE(
     }
 
     const serviceDb = getServiceRoleDatabase();
-    const { error: deleteError } = await serviceDb
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: deleteError } = await (serviceDb as any)
       .from('brands')
-      .update({ deleted_at: new Date().toISOString() } as any)
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', brandId)
       .eq('store_id', storeId);
 

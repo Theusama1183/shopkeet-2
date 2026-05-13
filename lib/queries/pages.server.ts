@@ -115,9 +115,9 @@ export async function isSlugAvailable(storeId: string, slug: string, excludePage
     query = query.neq('id', excludePageId);
   }
 
-  const { data, error } = await query.single();
+  const { data, error } = await query.maybeSingle();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+  if (error) { // maybeSingle() only errors on real DB errors, not "no rows"
     console.error('Error checking slug availability:', error);
     throw new Error(error.message);
   }
@@ -150,8 +150,6 @@ export async function createPage(pageData: {
       meta_description: pageData.metaDescription || null,
       store_id: pageData.storeId,
       is_published: pageData.isPublished || false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     })
     .select()
     .single();
@@ -304,7 +302,7 @@ export async function getHomePage(storeId: string) {
     .from('pages')
     .select('*')
     .eq('store_id', storeId)
-    .in('slug', ['home', 'index', ''])
+    .in('slug', ['home', 'index'])
     .eq('is_published', true)
     .is('deleted_at', null)
     .order('created_at', { ascending: true })

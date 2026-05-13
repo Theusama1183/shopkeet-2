@@ -155,7 +155,7 @@ export function formatErrorResponse(error: unknown, correlationId?: string): Nex
 
 // Generate correlation ID for error tracking
 export function generateCorrelationId(): string {
-  return `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `err_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
 // Async error handler wrapper

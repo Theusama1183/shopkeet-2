@@ -15,7 +15,6 @@ interface StorefrontHeaderProps {
   storeName: string;
   logo?: string | null;
   pages: Page[];
-  subdomain: string;
 }
 
 export function StorefrontHeader({ storeName, logo, pages }: StorefrontHeaderProps) {
@@ -24,8 +23,17 @@ export function StorefrontHeader({ storeName, logo, pages }: StorefrontHeaderPro
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll);
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 10);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -92,16 +100,14 @@ export function StorefrontHeader({ storeName, logo, pages }: StorefrontHeaderPro
                 <Search className="w-5 h-5" />
               </button>
               
-              {/* Wishlist */}
+              {/* Wishlist — hidden until cart/wishlist system is implemented */}
               <button className="hidden sm:flex p-2.5 text-zinc-500 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all duration-200 relative">
                 <Heart className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
               </button>
 
-              {/* Cart */}
+              {/* Cart — hidden until cart system is implemented */}
               <button className="relative p-2.5 text-zinc-500 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all duration-200 group">
                 <ShoppingCart className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-violet-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">2</span>
               </button>
 
               {/* Account */}

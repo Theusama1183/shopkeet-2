@@ -1,27 +1,45 @@
 import { createClient } from "@/lib/supabase/server";
 
+/**
+ * Require that the user has authenticated recently (within maxAgeMinutes).
+ * Uses the JWT `iat` (issued-at) claim — the actual time this token was issued.
+ * This is more accurate than `last_sign_in_at` which reflects the last login,
+ * not the current session's issue time.
+ */
 export async function requireRecentSession(maxAgeMinutes: number = 5): Promise<void> {
   const supabase = await createClient();
-  
-  // Use getUser() instead of getSession() to validate with Supabase servers
-  // This prevents token spoofing attacks
+
   const { data: { user }, error } = await supabase.auth.getUser();
-  
+
   if (error || !user) {
     throw new Error("No active session");
   }
-  
-  // Validate session age using user.last_sign_in_at
-  const lastSignInAt = user.last_sign_in_at;
-  if (!lastSignInAt) {
-    // If we can't determine session age, require re-authentication for security
-    throw new Error("Session age cannot be determined - please re-authenticate");
+
+  // Get the current session to read the JWT iat claim
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error("No active session");
   }
-  
-  const sessionAge = Date.now() - new Date(lastSignInAt).getTime();
-  const maxAge = maxAgeMinutes * 60 * 1000;
-  
-  if (sessionAge > maxAge) {
-    throw new Error("Session expired - please re-authenticate");
+
+  // Decode the JWT to get the issued-at time
+  // The JWT payload is base64url encoded in the second segment
+  try {
+    const payload = JSON.parse(
+      Buffer.from(session.access_token.split('.')[1], 'base64url').toString()
+    );
+    const issuedAt = payload.iat as number; // Unix timestamp in seconds
+    const sessionAgeMs = Date.now() - issuedAt * 1000;
+    const maxAgeMs = maxAgeMinutes * 60 * 1000;
+
+    if (sessionAgeMs > maxAgeMs) {
+      throw new Error("Session expired - please re-authenticate");
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message === "Session expired - please re-authenticate") {
+      throw e;
+    }
+    // If we can't decode the JWT, require re-auth for security
+    throw new Error("Session age cannot be determined - please re-authenticate");
   }
 }

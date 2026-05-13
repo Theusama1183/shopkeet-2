@@ -195,23 +195,10 @@ export class PerformanceTracker {
   }
 
   private sendToAnalytics(metric: PerformanceMetric) {
-    // Implement based on your analytics provider
-    // Examples: Google Analytics, Mixpanel, custom endpoint
-    
     if (process.env.NODE_ENV === 'development') {
-      console.log('Performance metric:', metric);
+      console.debug('[perf]', metric.name, metric.value);
     }
-
-    // Example: Send to custom analytics endpoint
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-      fetch('/api/analytics/performance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(metric),
-      }).catch(error => {
-        console.warn('Failed to send performance metric:', error);
-      });
-    }
+    // TODO: Send to analytics provider (PostHog, Mixpanel, etc.)
   }
 
   /**

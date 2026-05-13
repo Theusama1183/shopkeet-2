@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLoadingStore } from '@/lib/stores';
-import { useEffect } from 'react';
+import { useQueryLoading } from './use-query-loading';
 
 // Query keys
 export const categoryKeys = {
@@ -99,48 +98,26 @@ async function deleteCategoryApi(storeId: string, categoryId: string): Promise<v
 
 // Hooks
 export function useCategories(storeId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: categoryKeys.list(storeId),
     queryFn: () => fetchCategories(storeId),
     enabled: !!storeId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`categories-${storeId}`);
-    } else {
-      stopLoading(`categories-${storeId}`);
-    }
-    return () => stopLoading(`categories-${storeId}`);
-  }, [query.isLoading, storeId, startLoading, stopLoading]);
-  
+  useQueryLoading(`categories-${storeId}`, query.isLoading);
   return query;
 }
 
 export function useCategory(storeId: string, categoryId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: categoryKeys.detail(categoryId),
     queryFn: () => fetchCategory(storeId, categoryId),
     enabled: !!storeId && !!categoryId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`category-${categoryId}`);
-    } else {
-      stopLoading(`category-${categoryId}`);
-    }
-    return () => stopLoading(`category-${categoryId}`);
-  }, [query.isLoading, categoryId, startLoading, stopLoading]);
-  
+  useQueryLoading(`category-${categoryId}`, query.isLoading);
   return query;
 }
 

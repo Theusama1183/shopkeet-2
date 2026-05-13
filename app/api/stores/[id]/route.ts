@@ -111,6 +111,13 @@ export async function PATCH(
     }
 
     if (logo !== undefined) {
+      if (logo !== null) {
+        try {
+          new URL(logo);
+        } catch {
+          return NextResponse.json({ error: "Invalid logo URL" }, { status: 400 });
+        }
+      }
       updates.logo = logo;
     }
 
@@ -122,9 +129,10 @@ export async function PATCH(
 
     // Update store
     const serviceDb = getServiceRoleDatabase();
-    const { data: updatedStoreData, error: updateError } = await serviceDb
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updatedStoreData, error: updateError } = await (serviceDb as any)
       .from('stores')
-      .update(updates as any)
+      .update(updates)
       .eq('id', id)
       .select()
       .single();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DataTable, Column, FilterField } from "@/components/ui/data-table";
 import {
@@ -48,6 +49,7 @@ interface TemplatesClientProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function TemplatesClient({ storeId }: TemplatesClientProps) {
+  const router = useRouter();
   const { data: templates = [], isLoading } = useTemplates(storeId);
   const createTemplate = useCreateTemplate(storeId);
   const deleteTemplate = useDeleteTemplate(storeId);
@@ -68,7 +70,7 @@ export function TemplatesClient({ storeId }: TemplatesClientProps) {
       setShowCreate(false);
       setCreateName("");
       notification.success("Template created", "The template has been created successfully");
-      window.location.href = `/store/${storeId}/design/template/${created.id}`;
+      router.push(`/store/${storeId}/design/template/${created.id}`);
     } catch (error: any) {
       setCreateError(error.message || "Failed to create template");
     }
@@ -224,7 +226,7 @@ export function TemplatesClient({ storeId }: TemplatesClientProps) {
           },
         }}
         onRowClick={(item) => {
-          if (storeId) window.location.href = `/store/${storeId}/design/template/${item.id}`;
+          router.push(`/store/${storeId}/design/template/${item.id}`);
         }}
         actions={(item) => {
           const t = item as Template;

@@ -78,7 +78,6 @@ export const rateLimits = {
 // CDN/WAF layer (Cloudflare, Vercel Firewall), not just in-app rate limiting.
 export async function checkRateLimit(
   limiter: Ratelimit | null,
-  _fallbackKey: string,
   identifier: string
 ): Promise<{ success: boolean; remaining: number; reset: number }> {
   if (!limiter) {
@@ -103,13 +102,11 @@ export async function checkRateLimit(
 // ── withRateLimit — middleware helper ─────────────────────────────────────────
 export async function withRateLimit(
   limiter: Ratelimit | null,
-  fallbackKey: string,
   identifier: string,
   handler: () => Promise<Response>
 ): Promise<Response> {
   const { success, remaining, reset } = await checkRateLimit(
     limiter,
-    fallbackKey,
     identifier
   );
 

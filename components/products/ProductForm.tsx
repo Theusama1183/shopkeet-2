@@ -206,7 +206,11 @@ export function ProductForm({ storeId, productId, mode }: ProductFormProps) {
       if (mode === "edit" && productId) {
         await updateProduct.mutateAsync({ id: productId, ...payload });
       } else {
-        const newProduct = await createProduct.mutateAsync({ ...payload, storeId });
+        const newProduct = await createProduct.mutateAsync({ 
+          ...payload, 
+          storeId,
+          description: payload.description ?? undefined,
+        });
         
         // Immediately update cache with new product
         queryClient.setQueryData(productKeys.detail(newProduct.id), newProduct);

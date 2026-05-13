@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLoadingStore } from '@/lib/stores';
-import { useEffect } from 'react';
+import { useQueryLoading } from './use-query-loading';
 
 // Query keys
 export const pageKeys = {
@@ -110,49 +109,27 @@ async function deletePageApi(storeId: string, pageId: string): Promise<void> {
 
 // Hooks
 export function usePages(storeId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: pageKeys.list(storeId),
     queryFn: () => fetchPages(storeId),
-    select: (data) => data.items || [], // Extract items array from response
+    select: (data) => data.items || [],
     enabled: !!storeId,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 5,    // 5 minutes
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 5,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`pages-${storeId}`);
-    } else {
-      stopLoading(`pages-${storeId}`);
-    }
-    return () => stopLoading(`pages-${storeId}`);
-  }, [query.isLoading, storeId, startLoading, stopLoading]);
-  
+  useQueryLoading(`pages-${storeId}`, query.isLoading);
   return query;
 }
 
 export function usePage(storeId: string, pageId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: pageKeys.detail(pageId),
     queryFn: () => fetchPage(storeId, pageId),
     enabled: !!storeId && !!pageId,
-    staleTime: 1000 * 60 * 1, // 1 minute - pages change frequently during editing
-    gcTime: 1000 * 60 * 5,    // 5 minutes
+    staleTime: 1000 * 60 * 1,
+    gcTime: 1000 * 60 * 5,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`page-${pageId}`);
-    } else {
-      stopLoading(`page-${pageId}`);
-    }
-    return () => stopLoading(`page-${pageId}`);
-  }, [query.isLoading, pageId, startLoading, stopLoading]);
-  
+  useQueryLoading(`page-${pageId}`, query.isLoading);
   return query;
 }
 

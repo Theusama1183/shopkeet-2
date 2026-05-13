@@ -59,13 +59,14 @@ export async function GET() {
   return NextResponse.json(checks, { status: statusCode });
 }
 
-// Readiness check (for Kubernetes)
+// Readiness check (for Kubernetes/load balancers)
 export async function HEAD() {
   try {
     const db = getServiceRoleDatabase();
-    await db.from('stores').select('id').limit(1);
+    // Use a lightweight RPC ping instead of a table query
+    await db.from('stores').select('id').limit(1).maybeSingle();
     return new NextResponse(null, { status: 200 });
-  } catch (error) {
+  } catch {
     return new NextResponse(null, { status: 503 });
   }
 }

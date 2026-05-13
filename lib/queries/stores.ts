@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLoadingStore } from '@/lib/stores';
-import { useEffect } from 'react';
+import { useQueryLoading } from './use-query-loading';
 
 // Query keys
 export const storeKeys = {
@@ -76,48 +75,25 @@ async function deleteStoreApi(id: string): Promise<void> {
 
 // Hooks
 export function useStores() {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: storeKeys.lists(),
     queryFn: fetchStores,
-    staleTime: 1000 * 60 * 5, // 5 minutes - stores don't change frequently
-    gcTime: 1000 * 60 * 10,   // Keep in cache for 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  // Integrate with global loading
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading('stores-list');
-    } else {
-      stopLoading('stores-list');
-    }
-    return () => stopLoading('stores-list');
-  }, [query.isLoading, startLoading, stopLoading]);
-  
+  useQueryLoading('stores-list', query.isLoading);
   return query;
 }
 
 export function useStore(id: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: storeKeys.detail(id),
     queryFn: () => fetchStore(id),
     enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5 minutes - store details don't change frequently
-    gcTime: 1000 * 60 * 10,   // Keep in cache for 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`store-${id}`);
-    } else {
-      stopLoading(`store-${id}`);
-    }
-    return () => stopLoading(`store-${id}`);
-  }, [query.isLoading, id, startLoading, stopLoading]);
-  
+  useQueryLoading(`store-${id}`, query.isLoading);
   return query;
 }
 

@@ -127,7 +127,7 @@ export function CollectionsTable({ storeId }: { storeId: string }) {
             <Download className="w-4 h-4" />
             Export
           </button>
-          <Link href={`/store/${storeId}/collections/new`}>
+          <Link href={`/admin/store/${storeId}/collections/new`}>
             <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors">
               <Plus className="w-4 h-4" />
               Add collection
@@ -145,7 +145,7 @@ export function CollectionsTable({ storeId }: { storeId: string }) {
         filters={filters}
         searchPlaceholder="Search collections..."
         getRowId={(item) => String((item as Collection).id)}
-        onRowClick={(item) => router.push(`/store/${storeId}/collections/${(item as Collection).id}/edit`)}
+        onRowClick={(item) => router.push(`/admin/store/${storeId}/collections/${(item as Collection).id}/edit`)}
         builtinBulkActions={{
           onBulkDelete: async (items) => {
             if (!confirm(`Delete ${items.length} collections?`)) return;
@@ -161,7 +161,7 @@ export function CollectionsTable({ storeId }: { storeId: string }) {
           const c = item as Collection;
           return (
             <div className="flex items-center gap-1">
-              <Link href={`/store/${storeId}/collections/${c.id}/edit`} onClick={(e) => e.stopPropagation()}>
+              <Link href={`/admin/store/${storeId}/collections/${c.id}/edit`} onClick={(e) => e.stopPropagation()}>
                 <button className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors" title="Edit">
                   <Edit className="w-4 h-4" />
                 </button>
@@ -188,7 +188,7 @@ export function CollectionsTable({ storeId }: { storeId: string }) {
               <p className="text-sm font-medium text-zinc-700">No collections yet</p>
               <p className="text-xs text-zinc-400 mt-1">Group your products into collections</p>
             </div>
-            <Link href={`/store/${storeId}/collections/new`}>
+            <Link href={`/admin/store/${storeId}/collections/new`}>
               <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors">
                 <Plus className="w-4 h-4" />
                 Add collection

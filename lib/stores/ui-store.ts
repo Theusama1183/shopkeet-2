@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from 'zustand';
 import { ReactNode } from 'react';
 
@@ -72,7 +74,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   
   // Modal actions
   openModal: (modal) => {
-    const id = `modal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `modal-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     const newModal: Modal = { ...modal, id };
     
     set((state) => ({

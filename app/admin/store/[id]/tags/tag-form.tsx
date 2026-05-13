@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, Save, Check, AlertCircle, Bookmark } from "lucide-react";
-import { useCreateTag, useUpdateTag, tagKeys } from "@/lib/queries";
+import { useCreateTag, useUpdateTag, useTag, tagKeys } from "@/lib/queries";
 import { useNotification } from "@/lib/stores";
 
 interface TagFormProps {
@@ -55,28 +55,28 @@ export function TagForm({ storeId, tagId, mode }: TagFormProps) {
   const createTag = useCreateTag(storeId);
   const updateTag = useUpdateTag(storeId);
   const notification = useNotification();
-  
+
+  // React Query — load existing tag in edit mode
+  const { data: existingTag, isLoading } = useTag(storeId, tagId ?? "");
+
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
-  const [isLoading, setIsLoading] = useState(mode === "edit");
   const [savedOk, setSavedOk] = useState(false);
   const [error, setError] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [formInitialized, setFormInitialized] = useState(false);
 
+  // Populate form when tag data loads
   useEffect(() => {
-    if (mode !== "edit" || !tagId) return;
-    fetch(`/api/stores/${storeId}/tags/${tagId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setForm({
-          name: data.name ?? "",
-          slug: data.slug ?? "",
-          color: data.color ?? "#6366f1",
-        });
-        setSlugEdited(!!data.slug);
-      })
-      .catch(() => router.push(`/store/${storeId}/tags`))
-      .finally(() => setIsLoading(false));
-  }, [mode, tagId, storeId, router]);
+    if (mode === "edit" && existingTag && !formInitialized) {
+      setForm({
+        name: existingTag.name ?? "",
+        slug: existingTag.slug ?? "",
+        color: existingTag.color ?? "#6366f1",
+      });
+      setSlugEdited(true);
+      setFormInitialized(true);
+    }
+  }, [mode, existingTag, formInitialized]);
 
   const handleNameChange = (name: string) => {
     setForm((prev) => ({ ...prev, name }));

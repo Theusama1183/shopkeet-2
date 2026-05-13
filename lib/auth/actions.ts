@@ -32,7 +32,6 @@ export async function loginAction(
     // Rate limiting by email
     const rl = await checkRateLimit(
       rateLimits.auth,
-      "auth",
       `login:${validEmail.toLowerCase()}`
     );
 
@@ -53,7 +52,6 @@ export async function loginAction(
 
     const ipRl = await checkRateLimit(
       rateLimits.auth,
-      "auth",
       `login-ip:${ip}`
     );
 
@@ -108,7 +106,6 @@ export async function signupAction(
     // Rate limiting by email
     const rl = await checkRateLimit(
       rateLimits.auth,
-      "auth",
       `signup:${validEmail.toLowerCase()}`
     );
 
@@ -129,7 +126,6 @@ export async function signupAction(
 
     const ipRl = await checkRateLimit(
       rateLimits.auth,
-      "auth",
       `signup-ip:${ip}`
     );
 

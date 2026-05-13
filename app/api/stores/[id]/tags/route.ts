@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
-import { withCache, cacheDelete } from "@/lib/redis";
+import { withCache, cacheDeletePattern } from "@/lib/redis";
 import { logAuditEvent } from "@/lib/audit/logger";
 import { z } from "zod";
 
@@ -130,7 +130,7 @@ export async function POST(
       metadata: { storeId, name },
     });
 
-    await cacheDelete(`tags:store:${storeId}:*`).catch(() => {});
+    await cacheDeletePattern(`tags:store:${storeId}:*`).catch(() => {});
 
     return NextResponse.json(newTag, { status: 201 });
   } catch (error) {

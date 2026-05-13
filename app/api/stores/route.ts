@@ -6,7 +6,6 @@ import { withCache } from "@/lib/redis";
 import { logAuditEvent } from "@/lib/audit/logger";
 import { validateStoreInput } from "@/lib/validations/store";
 import { inngest } from "@/lib/inngest/client";
-import type { Database } from "@/types/supabase";
 import { 
   withApiErrorHandler, 
   AuthenticationError, 

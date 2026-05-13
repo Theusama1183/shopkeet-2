@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, Save, Check, AlertCircle, ImageIcon } from "lucide-react";
-import { useCreateCategory, useUpdateCategory, categoryKeys } from "@/lib/queries";
+import { useCreateCategory, useUpdateCategory, useCategory, useCategories, categoryKeys } from "@/lib/queries";
 import { useNotification } from "@/lib/stores";
 
 interface CategoryFormProps {
@@ -42,38 +42,35 @@ export function CategoryForm({ storeId, categoryId, mode }: CategoryFormProps) {
   const createCategory = useCreateCategory(storeId);
   const updateCategory = useUpdateCategory(storeId);
   const notification = useNotification();
-  
+
+  // React Query — load existing category and all categories for parent selector
+  const { data: existingCategory, isLoading } = useCategory(storeId, categoryId ?? "");
+  const { data: allCategories = [] } = useCategories(storeId);
+
+  // Filter out current category from parent options
+  const parentOptions = allCategories.filter((c) => c.id !== categoryId);
+
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(mode === "edit");
   const [savedOk, setSavedOk] = useState(false);
   const [error, setError] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [formInitialized, setFormInitialized] = useState(false);
 
+  // Populate form when category data loads
   useEffect(() => {
-    // Load categories for parent selector
-    fetch(`/api/stores/${storeId}/categories`)
-      .then((r) => r.json())
-      .then((data) => setCategories(data.filter((c: any) => c.id !== categoryId)))
-      .catch(() => {});
-
-    if (mode !== "edit" || !categoryId) return;
-    fetch(`/api/stores/${storeId}/categories/${categoryId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setForm({
-          name: data.name ?? "",
-          slug: data.slug ?? "",
-          description: data.description ?? "",
-          image: data.image ?? "",
-          parentId: data.parent_id ?? "",
-          isActive: data.is_active ?? true,
-        });
-        setSlugEdited(!!data.slug);
-      })
-      .catch(() => router.push(`/store/${storeId}/categories`))
-      .finally(() => setIsLoading(false));
-  }, [mode, categoryId, storeId, router]);
+    if (mode === "edit" && existingCategory && !formInitialized) {
+      setForm({
+        name: existingCategory.name ?? "",
+        slug: existingCategory.slug ?? "",
+        description: existingCategory.description ?? "",
+        image: existingCategory.image ?? "",
+        parentId: existingCategory.parent_id ?? "",
+        isActive: existingCategory.is_active ?? true,
+      });
+      setSlugEdited(true);
+      setFormInitialized(true);
+    }
+  }, [mode, existingCategory, formInitialized]);
 
   const handleNameChange = (name: string) => {
     setForm((prev) => ({ ...prev, name }));
@@ -126,7 +123,7 @@ export function CategoryForm({ storeId, categoryId, mode }: CategoryFormProps) {
       );
 
       if (mode === "create") {
-        router.push(`/store/${storeId}/categories`);
+        router.push(`/admin/store/${storeId}/categories`);
       }
     } catch (error: any) {
       setError(error.message ?? "Failed to save");
@@ -148,7 +145,7 @@ export function CategoryForm({ storeId, categoryId, mode }: CategoryFormProps) {
     <div className="max-w-3xl mx-auto">
       <div className="sticky top-0 z-10 bg-zinc-50 border-b border-zinc-200 -mx-6 px-6 py-3 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href={`/store/${storeId}/categories`} className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
+          <Link href={`/admin/store/${storeId}/categories`} className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Categories
           </Link>
@@ -227,7 +224,7 @@ export function CategoryForm({ storeId, categoryId, mode }: CategoryFormProps) {
               className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
             >
               <option value="">None (Root category)</option>
-              {categories.map((cat) => (
+              {parentOptions.map((cat) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>

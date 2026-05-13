@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { Plus, Edit, Trash2, Layers, Check, Timer, TrendingUp, LogOut, MousePointer } from "lucide-react";
@@ -33,6 +34,7 @@ const TRIGGER_ICONS: Record<PopupTriggerEvent, React.ElementType> = {
 
 export default function PopupsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: storeId } = use(params);
+  const router = useRouter();
   const { data: popups = [], isLoading } = usePopups(storeId);
   const createPopup = useCreatePopup(storeId);
   const deletePopup = useDeletePopup(storeId);
@@ -52,7 +54,7 @@ export default function PopupsPage({ params }: { params: Promise<{ id: string }>
       setCreate(false);
       setNewName("");
       notification.success("Popup created", "The popup has been created successfully");
-      window.location.href = `/store/${storeId}/design/popup/${created.id}`;
+      router.push(`/store/${storeId}/design/popup/${created.id}`);
     } catch (error: any) {
       setCreateErr(error.message || "Failed to create popup");
     }
@@ -177,7 +179,7 @@ export default function PopupsPage({ params }: { params: Promise<{ id: string }>
           },
         }}
         onRowClick={(item) => {
-          if (storeId) window.location.href = `/store/${storeId}/design/popup/${item.id}`;
+          router.push(`/store/${storeId}/design/popup/${item.id}`);
         }}
         actions={(item) => {
           const p = item as PopupRow;

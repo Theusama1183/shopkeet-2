@@ -22,7 +22,7 @@ export async function GET(
     }
 
     // ── Rate limiting ────────────────────────────────────────────────────────
-    const rl = await checkRateLimit(rateLimits.read, "read", `read:${user.id}`);
+    const rl = await checkRateLimit(rateLimits.read, `read:${user.id}`);
     if (!rl.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfter: Math.ceil((rl.reset - Date.now()) / 1000) },
@@ -83,7 +83,7 @@ export async function POST(
     }
 
     // ── Rate limiting ────────────────────────────────────────────────────────
-    const rl = await checkRateLimit(rateLimits.api, "api", `page-create:${user.id}`);
+    const rl = await checkRateLimit(rateLimits.api, `page-create:${user.id}`);
     if (!rl.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfter: Math.ceil((rl.reset - Date.now()) / 1000) },

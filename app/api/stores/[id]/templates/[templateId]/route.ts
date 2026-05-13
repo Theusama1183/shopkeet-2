@@ -82,7 +82,6 @@ export async function PUT(
       // Deactivate all other templates of same type (excluding this one)
       await (serviceDb
         .from('templates')
-        // @ts-expect-error - Supabase type inference issue
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('store_id', id)
         .eq('type', (current as any).type)
@@ -92,7 +91,6 @@ export async function PUT(
 
   const { data: updatedData, error: updateError } = await (serviceDb
     .from('templates')
-    // @ts-expect-error - Supabase type inference issue
     .update(updateData)
     .eq('id', templateId)
     .eq('store_id', id)

@@ -66,12 +66,15 @@ export function getAnonDatabase() {
  * ⚠️ WARNING: This bypasses ALL RLS policies. Use with extreme caution.
  */
 export function getServiceRoleDatabase() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL is not set");
+  }
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
   }
 
   return createSupabaseClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: {
@@ -131,13 +134,18 @@ export function serviceTable<T = unknown>(tableName: TableName) {
 }
 
 /**
- * Transaction helper (uses Supabase RPC for atomic operations)
- * Note: Supabase doesn't support traditional transactions via client
- * Use database functions for complex atomic operations
+ * Convenience helper to get an authenticated database client.
+ * NOTE: This is NOT a real transaction — operations are not atomic.
+ * If you need atomicity, use a Supabase database function (RPC).
  */
-export async function transaction<T>(
+export async function withDatabase<T>(
   operations: (db: Awaited<ReturnType<typeof getDatabase>>) => Promise<T>
 ): Promise<T> {
   const db = await getDatabase();
   return operations(db);
 }
+
+/**
+ * @deprecated Use withDatabase() instead. This alias is kept for backward compatibility.
+ */
+export const transaction = withDatabase;

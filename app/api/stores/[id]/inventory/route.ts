@@ -130,7 +130,7 @@ export async function POST(
         allow_backorder: allowBackorder,
         updated_at: new Date().toISOString(),
       } as any, {
-        onConflict: 'product_id',
+        onConflict: 'product_id,store_id',
       })
       .select()
       .single();

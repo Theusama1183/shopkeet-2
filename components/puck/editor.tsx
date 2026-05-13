@@ -38,6 +38,7 @@ export function PuckEditor({ data, onPublish, onSave }: PuckEditorProps) {
 
   return (
     <div className="h-screen">
+      
       <Puck
         config={config}
         data={initialData.current}

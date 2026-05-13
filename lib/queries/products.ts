@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLoadingStore } from '@/lib/stores';
-import { useEffect } from 'react';
+import { useQueryLoading } from './use-query-loading';
 
 // Query keys
 export const productKeys = {
@@ -23,6 +22,8 @@ export interface Product {
   image: string | null;
   sku: string | null;
   is_active: boolean;
+  status?: string;
+  quantity?: number;
   store_id: string;
   created_at: string;
   updated_at: string;
@@ -83,49 +84,27 @@ async function deleteProductApi(id: string): Promise<void> {
 
 // Hooks
 export function useProducts(storeId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: productKeys.list(storeId),
     queryFn: () => fetchProducts(storeId),
-    select: (data) => data.items || [], // Extract items array from response
+    select: (data) => data.items || [],
     enabled: !!storeId,
-    staleTime: 1000 * 60 * 2, // 2 minutes - products change more frequently
-    gcTime: 1000 * 60 * 5,    // Keep in cache for 5 minutes
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 5,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`products-${storeId}`);
-    } else {
-      stopLoading(`products-${storeId}`);
-    }
-    return () => stopLoading(`products-${storeId}`);
-  }, [query.isLoading, storeId, startLoading, stopLoading]);
-  
+  useQueryLoading(`products-${storeId}`, query.isLoading);
   return query;
 }
 
 export function useProduct(id: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: productKeys.detail(id),
     queryFn: () => fetchProduct(id),
     enabled: !!id,
-    staleTime: 1000 * 60 * 2, // 2 minutes - product details change more frequently
-    gcTime: 1000 * 60 * 5,    // Keep in cache for 5 minutes
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 5,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`product-${id}`);
-    } else {
-      stopLoading(`product-${id}`);
-    }
-    return () => stopLoading(`product-${id}`);
-  }, [query.isLoading, id, startLoading, stopLoading]);
-  
+  useQueryLoading(`product-${id}`, query.isLoading);
   return query;
 }
 

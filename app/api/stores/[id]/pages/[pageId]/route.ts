@@ -31,7 +31,7 @@ export async function GET(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const rl = await checkRateLimit(rateLimits.read, "read", `read:${user.id}`);
+    const rl = await checkRateLimit(rateLimits.read, `read:${user.id}`);
     if (!rl.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfter: Math.ceil((rl.reset - Date.now()) / 1000) },
@@ -81,7 +81,7 @@ export async function PUT(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const rl = await checkRateLimit(rateLimits.api, "api", `page-update:${user.id}`);
+    const rl = await checkRateLimit(rateLimits.api, `page-update:${user.id}`);
     if (!rl.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfter: Math.ceil((rl.reset - Date.now()) / 1000) },
@@ -183,7 +183,7 @@ export async function DELETE(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const rl = await checkRateLimit(rateLimits.api, "api", `page-delete:${user.id}`);
+    const rl = await checkRateLimit(rateLimits.api, `page-delete:${user.id}`);
     if (!rl.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfter: Math.ceil((rl.reset - Date.now()) / 1000) },

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
-import { withCache, cacheDelete } from "@/lib/redis";
+import { withCache, cacheDeletePattern } from "@/lib/redis";
 import { rateLimits } from "@/lib/redis/rate-limit";
 import { logAuditEvent } from "@/lib/audit/logger";
 import { inngest } from "@/lib/inngest/client";
@@ -186,7 +186,7 @@ export async function POST(
     });
 
     // Invalidate product list cache
-    await cacheDelete(`products:store:${storeId}:*`).catch(() => {});
+    await cacheDeletePattern(`products:store:${storeId}:*`).catch(() => {});
 
     return NextResponse.json(newProduct, { status: 201 });
   } catch (error) {

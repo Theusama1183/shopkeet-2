@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: page.metaTitle || page.title,
       description: page.metaDescription || `${page.title} - ${store.name}`,
-      siteName: store.name,
+      siteName: store.name ?? undefined,
     },
   };
 }

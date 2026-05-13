@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLoadingStore } from '@/lib/stores';
-import { useEffect } from 'react';
+import { useQueryLoading } from './use-query-loading';
 
 // Query keys
 export const collectionKeys = {
@@ -98,48 +97,26 @@ async function deleteCollectionApi(storeId: string, collectionId: string): Promi
 
 // Hooks
 export function useCollections(storeId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: collectionKeys.list(storeId),
     queryFn: () => fetchCollections(storeId),
     enabled: !!storeId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`collections-${storeId}`);
-    } else {
-      stopLoading(`collections-${storeId}`);
-    }
-    return () => stopLoading(`collections-${storeId}`);
-  }, [query.isLoading, storeId, startLoading, stopLoading]);
-  
+  useQueryLoading(`collections-${storeId}`, query.isLoading);
   return query;
 }
 
 export function useCollection(storeId: string, collectionId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: collectionKeys.detail(collectionId),
     queryFn: () => fetchCollection(storeId, collectionId),
     enabled: !!storeId && !!collectionId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`collection-${collectionId}`);
-    } else {
-      stopLoading(`collection-${collectionId}`);
-    }
-    return () => stopLoading(`collection-${collectionId}`);
-  }, [query.isLoading, collectionId, startLoading, stopLoading]);
-  
+  useQueryLoading(`collection-${collectionId}`, query.isLoading);
   return query;
 }
 

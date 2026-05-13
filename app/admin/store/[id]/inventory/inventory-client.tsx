@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Column, FilterField, DataTableProps } from "@/components/ui/data-table";
@@ -30,7 +29,7 @@ interface InventoryItem {
 }
 
 export function InventoryTable({ initialInventory, storeId }: { initialInventory: InventoryItem[]; storeId: string }) {
-  const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory);
+  const inventory = initialInventory;
 
   const columns: Column<InventoryItem>[] = [
     {
@@ -83,7 +82,7 @@ export function InventoryTable({ initialInventory, storeId }: { initialInventory
       },
     },
     {
-      key: "lowStockThreshold",
+      key: "low_stock_threshold",
       label: "Low Stock Alert",
       render: (i) => (
         <span className="text-sm text-zinc-600">
@@ -92,7 +91,7 @@ export function InventoryTable({ initialInventory, storeId }: { initialInventory
       ),
     },
     {
-      key: "trackInventory",
+      key: "track_inventory",
       label: "Tracking",
       render: (i) => (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
@@ -105,7 +104,7 @@ export function InventoryTable({ initialInventory, storeId }: { initialInventory
       ),
     },
     {
-      key: "allowBackorder",
+      key: "allow_backorder",
       label: "Backorder",
       render: (i) => (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
@@ -118,7 +117,7 @@ export function InventoryTable({ initialInventory, storeId }: { initialInventory
       ),
     },
     {
-      key: "updatedAt",
+      key: "updated_at",
       label: "Last Updated",
       sortable: true,
       render: (i) => {
@@ -158,8 +157,8 @@ export function InventoryTable({ initialInventory, storeId }: { initialInventory
 
   // Calculate stats
   const outOfStock = inventory.filter(i => i.quantity === 0).length;
-  const lowStock = inventory.filter(i => i.quantity > 0 && i.quantity <= (i.lowStockThreshold || 5)).length;
-  const inStock = inventory.filter(i => i.quantity > (i.lowStockThreshold || 5)).length;
+  const lowStock = inventory.filter(i => i.quantity > 0 && i.quantity <= (i.low_stock_threshold || 5)).length;
+  const inStock = inventory.filter(i => i.quantity > (i.low_stock_threshold || 5)).length;
 
   return (
     <div className="space-y-5">

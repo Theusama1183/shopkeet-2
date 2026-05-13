@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLoadingStore } from '@/lib/stores';
-import { useEffect } from 'react';
+import { useQueryLoading } from './use-query-loading';
 
 // Query keys
 export const popupKeys = {
@@ -118,48 +117,26 @@ async function togglePopupApi(
 
 // Hooks
 export function usePopups(storeId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: popupKeys.list(storeId),
     queryFn: () => fetchPopups(storeId),
     enabled: !!storeId,
-    staleTime: 1000 * 60 * 3, // 3 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 3,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`popups-${storeId}`);
-    } else {
-      stopLoading(`popups-${storeId}`);
-    }
-    return () => stopLoading(`popups-${storeId}`);
-  }, [query.isLoading, storeId, startLoading, stopLoading]);
-  
+  useQueryLoading(`popups-${storeId}`, query.isLoading);
   return query;
 }
 
 export function usePopup(storeId: string, popupId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: popupKeys.detail(popupId),
     queryFn: () => fetchPopup(storeId, popupId),
     enabled: !!storeId && !!popupId,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`popup-${popupId}`);
-    } else {
-      stopLoading(`popup-${popupId}`);
-    }
-    return () => stopLoading(`popup-${popupId}`);
-  }, [query.isLoading, popupId, startLoading, stopLoading]);
-  
+  useQueryLoading(`popup-${popupId}`, query.isLoading);
   return query;
 }
 

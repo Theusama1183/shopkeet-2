@@ -245,6 +245,7 @@ function Step2({ formData, setFormData, onNext, onBack }: any) {
 
 function Step3({ formData }: any) {
   const [status, setStatus] = useState("init");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const sequence = async () => {
@@ -262,19 +263,21 @@ function Step3({ formData }: any) {
       form.append("description", formData.description);
       
       const res = await createStore(null, form);
-      if (res?.error) {
-          alert(res.error); 
-          // Handle error (maybe go back?)
+      if (!res || res?.error) {
+        setError(res?.error || "Something went wrong. Please try again.");
+        setStatus("init");
       } else {
-          // Success
-          const protocol = window.location.protocol;
-          const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
-          const storeUrl = `${protocol}//${res.subdomain}.${rootDomain}`;
-          window.location.href = storeUrl;
+        const protocol = window.location.protocol;
+        const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+        window.location.href = `${protocol}//${res.subdomain}.${rootDomain}`;
       }
     };
-    sequence();
-  }, []);
+    sequence().catch((err) => {
+      setError(err?.message || "An unexpected error occurred.");
+      setStatus("init");
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.name, formData.subdomain, formData.description]);
 
   const steps = [
       { id: "db", label: "Setting up database" },
@@ -289,31 +292,45 @@ function Step3({ formData }: any) {
        </div>
        
        <div className="z-10 text-center space-y-8">
-           <h1 className="text-[64px] font-heading font-semibold text-zinc-900">
-               Building your storefront...
-           </h1>
-           
-           <div className="flex flex-col items-center gap-4">
-               {steps.map((s, i) => (
-                   <div key={s.id} className="h-8 flex items-center justify-center">
-                       {/* Show based on status progression */}
-                       {(status === s.id || (status === "ready" && s.id !== "ready") || (status === "store" && s.id === "db")) && (
-                           <motion.span
-                                initial={{ filter: "blur(10px)", opacity: 0, y: 10 }}
-                                animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-                                className={cn(
-                                    "text-2xl font-medium",
-                                    status === s.id ? "text-violet-600" : "text-zinc-400"
-                                )}
-                           >
-                               {status === s.id && <Loader2 className="inline w-5 h-5 animate-spin mr-2"/>}
-                               {s.label}
-                               {status !== s.id && status !== "init" && i < steps.findIndex(x => x.id === status) && <Check className="inline w-5 h-5 ml-2 text-green-500"/>}
-                           </motion.span>
-                       )}
-                   </div>
-               ))}
-           </div>
+           {error ? (
+             <div className="space-y-4">
+               <h1 className="text-[48px] font-heading font-semibold text-zinc-900">Something went wrong</h1>
+               <p className="text-xl text-red-500">{error}</p>
+               <button
+                 onClick={() => { setError(null); setStatus("init"); }}
+                 className="px-6 py-3 bg-violet-500 hover:bg-violet-600 text-white font-medium rounded-xl transition-colors"
+               >
+                 Try Again
+               </button>
+             </div>
+           ) : (
+             <>
+               <h1 className="text-[64px] font-heading font-semibold text-zinc-900">
+                   Building your storefront...
+               </h1>
+               
+               <div className="flex flex-col items-center gap-4">
+                   {steps.map((s, i) => (
+                       <div key={s.id} className="h-8 flex items-center justify-center">
+                           {(status === s.id || (status === "ready" && s.id !== "ready") || (status === "store" && s.id === "db")) && (
+                               <motion.span
+                                    initial={{ filter: "blur(10px)", opacity: 0, y: 10 }}
+                                    animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+                                    className={cn(
+                                        "text-2xl font-medium",
+                                        status === s.id ? "text-violet-600" : "text-zinc-400"
+                                    )}
+                               >
+                                   {status === s.id && <Loader2 className="inline w-5 h-5 animate-spin mr-2"/>}
+                                   {s.label}
+                                   {status !== s.id && status !== "init" && i < steps.findIndex(x => x.id === status) && <Check className="inline w-5 h-5 ml-2 text-green-500"/>}
+                               </motion.span>
+                           )}
+                       </div>
+                   ))}
+               </div>
+             </>
+           )}
        </div>
     </motion.div>
   );

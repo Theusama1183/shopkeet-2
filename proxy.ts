@@ -79,7 +79,7 @@ export default async function proxy(req: NextRequest) {
     try {
       // 300ms timeout — if Redis is slow, skip rate limiting
       const rl = await Promise.race([
-        checkRateLimit(rateLimits.global, "global", `global:${ip}`),
+        checkRateLimit(rateLimits.global, `global:${ip}`),
         new Promise<{ success: boolean; remaining: number; reset: number }>(
           (resolve) => setTimeout(() => resolve({ success: true, remaining: 999, reset: Date.now() + 60_000 }), RATE_LIMIT_TIMEOUT_MS)
         ),

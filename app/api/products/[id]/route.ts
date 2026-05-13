@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getServiceRoleDatabase } from "@/lib/supabase/database";
 import { logAuditEvent } from "@/lib/audit/logger";
+import { updateProductSchema } from "@/lib/validations/product";
+import { cacheDeletePattern } from "@/lib/redis";
+import { invalidateTags } from "@/lib/cache-helpers";
+import { inngest } from "@/lib/inngest/client";
 
 // GET /api/products/[id] - Get single product
 export async function GET(
@@ -16,21 +21,18 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch product with store info using Supabase
     const { data: product, error } = await supabase
       .from('products')
-      .select(`
-        *,
-        store:stores(*)
-      `)
+      .select(`*, store:stores(*)`)
       .eq('id', id)
+      .is('deleted_at', null)
       .single();
 
     if (error || !product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Authorization check - user must own the store
+    // Authorization — user must own the store
     if (!product.store || product.store.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -38,10 +40,7 @@ export async function GET(
     return NextResponse.json(product);
   } catch (error) {
     console.error("Error fetching product:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch product" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch product" }, { status: 500 });
   }
 }
 
@@ -59,67 +58,51 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch product with store info
+    // Fetch product with store info for authorization
     const { data: existingProduct, error: fetchError } = await supabase
       .from('products')
-      .select(`
-        *,
-        store:stores(*)
-      `)
+      .select(`*, store:stores(*)`)
       .eq('id', id)
+      .is('deleted_at', null)
       .single();
 
     if (fetchError || !existingProduct) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Authorization check - user must own the store
     if (!existingProduct.store || existingProduct.store.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body = await req.json();
-    const { name, description, price, image } = body;
-
-    // Validate and build updates
-    const updates: any = { updated_at: new Date().toISOString() };
-
-    if (name !== undefined) {
-      if (!name || name.length < 2 || name.length > 200) {
-        return NextResponse.json(
-          { error: "Product name must be 2-200 characters" },
-          { status: 400 }
-        );
-      }
-      updates.name = name.trim().replace(/[<>]/g, '');
+    // Validate with Zod schema (consistent with createProductSchema)
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    if (description !== undefined) {
-      if (description && description.length > 1000) {
-        return NextResponse.json(
-          { error: "Description must be under 1000 characters" },
-          { status: 400 }
-        );
-      }
-      updates.description = description?.trim().replace(/[<>]/g, '') || null;
+    const validation = updateProductSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.issues[0]?.message ?? "Validation failed" },
+        { status: 400 }
+      );
     }
 
-    if (price !== undefined) {
-      if (typeof price !== "number" || price < 0) {
-        return NextResponse.json(
-          { error: "Valid price is required (in cents)" },
-          { status: 400 }
-        );
-      }
-      updates.price = price;
-    }
+    const { name, description, price, image } = validation.data;
 
-    if (image !== undefined) {
-      updates.image = image;
-    }
+    // Build update object with snake_case columns
+    const updates: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (name        !== undefined) updates.name        = name;
+    if (description !== undefined) updates.description = description ?? null;
+    if (price       !== undefined) updates.price       = price;
+    if (image       !== undefined) updates.image       = image ?? null;
 
-    // Update product using Supabase
-    const { data: updatedProduct, error: updateError } = await supabase
+    const serviceDb = getServiceRoleDatabase();
+    const { data: updatedProduct, error: updateError } = await serviceDb
       .from('products')
       .update(updates)
       .eq('id', id)
@@ -127,11 +110,22 @@ export async function PATCH(
       .single();
 
     if (updateError || !updatedProduct) {
-      return NextResponse.json(
-        { error: "Failed to update product" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
     }
+
+    // Invalidate caches
+    await cacheDeletePattern(`products:store:${existingProduct.store_id}:*`).catch(() => {});
+    invalidateTags("products");
+
+    // Fire Inngest event (fire-and-forget)
+    inngest.send({
+      name: "product/updated",
+      data: {
+        productId: id,
+        storeId: existingProduct.store_id,
+        changes: Object.keys(updates).filter(k => k !== 'updated_at'),
+      },
+    }).catch((err) => console.error("[inngest] Failed to send product/updated:", err));
 
     // Audit log (fire-and-forget)
     logAuditEvent({
@@ -145,14 +139,11 @@ export async function PATCH(
     return NextResponse.json(updatedProduct);
   } catch (error) {
     console.error("Error updating product:", error);
-    return NextResponse.json(
-      { error: "Failed to update product" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
   }
 }
 
-// DELETE /api/products/[id] - Delete product
+// DELETE /api/products/[id] - Soft delete product
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -166,37 +157,45 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch product with store info
+    // Fetch product with store info for authorization
     const { data: existingProduct, error: fetchError } = await supabase
       .from('products')
-      .select(`
-        *,
-        store:stores(*)
-      `)
+      .select(`*, store:stores(*)`)
       .eq('id', id)
+      .is('deleted_at', null)
       .single();
 
     if (fetchError || !existingProduct) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Authorization check
     if (!existingProduct.store || existingProduct.store.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Delete product using Supabase
-    const { error: deleteError } = await supabase
+    // Soft delete — set deleted_at instead of hard delete
+    const serviceDb = getServiceRoleDatabase();
+    const { error: deleteError } = await serviceDb
       .from('products')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', id);
 
     if (deleteError) {
-      return NextResponse.json(
-        { error: "Failed to delete product" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
     }
+
+    // Invalidate caches
+    await cacheDeletePattern(`products:store:${existingProduct.store_id}:*`).catch(() => {});
+    invalidateTags("products");
+
+    // Fire Inngest event (fire-and-forget)
+    inngest.send({
+      name: "product/deleted",
+      data: { productId: id, storeId: existingProduct.store_id },
+    }).catch((err) => console.error("[inngest] Failed to send product/deleted:", err));
 
     // Audit log (fire-and-forget)
     logAuditEvent({
@@ -210,9 +209,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting product:", error);
-    return NextResponse.json(
-      { error: "Failed to delete product" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
   }
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, Save, Check, AlertCircle, ImageIcon } from "lucide-react";
-import { useCreateBrand, useUpdateBrand, brandKeys } from "@/lib/queries";
+import { useCreateBrand, useUpdateBrand, useBrand, brandKeys } from "@/lib/queries";
 import { useNotification } from "@/lib/stores";
 
 interface BrandFormProps {
@@ -42,31 +42,34 @@ export function BrandForm({ storeId, brandId, mode }: BrandFormProps) {
   const createBrand = useCreateBrand(storeId);
   const updateBrand = useUpdateBrand(storeId);
   const notification = useNotification();
-  
+
+  // Use React Query to load existing brand in edit mode
+  const { data: existingBrand, isLoading } = useBrand(
+    storeId,
+    brandId ?? "",
+  );
+
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
-  const [isLoading, setIsLoading] = useState(mode === "edit");
   const [savedOk, setSavedOk] = useState(false);
   const [error, setError] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [formInitialized, setFormInitialized] = useState(false);
 
+  // Populate form when brand data loads
   useEffect(() => {
-    if (mode !== "edit" || !brandId) return;
-    fetch(`/api/stores/${storeId}/brands/${brandId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setForm({
-          name: data.name ?? "",
-          slug: data.slug ?? "",
-          description: data.description ?? "",
-          logo: data.logo ?? "",
-          website: data.website ?? "",
-          isActive: data.is_active ?? true,
-        });
-        setSlugEdited(!!data.slug);
-      })
-      .catch(() => router.push(`/store/${storeId}/brands`))
-      .finally(() => setIsLoading(false));
-  }, [mode, brandId, storeId, router]);
+    if (mode === "edit" && existingBrand && !formInitialized) {
+      setForm({
+        name: existingBrand.name ?? "",
+        slug: existingBrand.slug ?? "",
+        description: existingBrand.description ?? "",
+        logo: existingBrand.logo ?? "",
+        website: existingBrand.website ?? "",
+        isActive: existingBrand.is_active ?? true,
+      });
+      setSlugEdited(true);
+      setFormInitialized(true);
+    }
+  }, [mode, existingBrand, formInitialized]);
 
   const handleNameChange = (name: string) => {
     setForm((prev) => ({ ...prev, name }));
@@ -119,7 +122,7 @@ export function BrandForm({ storeId, brandId, mode }: BrandFormProps) {
       );
 
       if (mode === "create") {
-        router.push(`/store/${storeId}/brands`);
+        router.push(`/admin/store/${storeId}/brands`);
       }
     } catch (error: any) {
       setError(error.message ?? "Failed to save");
@@ -141,7 +144,7 @@ export function BrandForm({ storeId, brandId, mode }: BrandFormProps) {
     <div className="max-w-3xl mx-auto">
       <div className="sticky top-0 z-10 bg-zinc-50 border-b border-zinc-200 -mx-6 px-6 py-3 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href={`/store/${storeId}/brands`} className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
+          <Link href={`/admin/store/${storeId}/brands`} className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Brands
           </Link>

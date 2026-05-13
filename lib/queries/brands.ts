@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLoadingStore } from '@/lib/stores';
-import { useEffect } from 'react';
+import { useQueryLoading } from './use-query-loading';
 
 // Query keys
 export const brandKeys = {
@@ -101,48 +100,26 @@ async function deleteBrandApi(storeId: string, brandId: string): Promise<void> {
 
 // Hooks
 export function useBrands(storeId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: brandKeys.list(storeId),
     queryFn: () => fetchBrands(storeId),
     enabled: !!storeId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`brands-${storeId}`);
-    } else {
-      stopLoading(`brands-${storeId}`);
-    }
-    return () => stopLoading(`brands-${storeId}`);
-  }, [query.isLoading, storeId, startLoading, stopLoading]);
-  
+  useQueryLoading(`brands-${storeId}`, query.isLoading);
   return query;
 }
 
 export function useBrand(storeId: string, brandId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: brandKeys.detail(brandId),
     queryFn: () => fetchBrand(storeId, brandId),
     enabled: !!storeId && !!brandId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`brand-${brandId}`);
-    } else {
-      stopLoading(`brand-${brandId}`);
-    }
-    return () => stopLoading(`brand-${brandId}`);
-  }, [query.isLoading, brandId, startLoading, stopLoading]);
-  
+  useQueryLoading(`brand-${brandId}`, query.isLoading);
   return query;
 }
 

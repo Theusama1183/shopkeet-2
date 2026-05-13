@@ -1,30 +1,24 @@
 import { inngest } from "../client";
+import { cacheDelete } from "@/lib/redis/cache";
 
 // ── Tag Created ───────────────────────────────────────────────────────────────
 export const onTagCreated = inngest.createFunction(
-  {
-    id: "on-tag-created",
-    name: "Tag Created",
-  },
+  { id: "on-tag-created", name: "Tag Created" },
   { event: "tag/created" },
   async ({ event, step }) => {
     const { tagId, storeId, name } = event.data;
 
-    // Step 1: Update search index
     await step.run("update-search-index", async () => {
       console.log(`[search] Indexing tag: ${name} (${tagId})`);
       // TODO: Update search index (e.g., Algolia, Meilisearch)
       return { indexed: true };
     });
 
-    // Step 2: Invalidate cache
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`tags:${storeId}`, `tag:${tagId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`tags:${storeId}`),
+        cacheDelete(`tag:${tagId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -34,28 +28,21 @@ export const onTagCreated = inngest.createFunction(
 
 // ── Category Created ──────────────────────────────────────────────────────────
 export const onCategoryCreated = inngest.createFunction(
-  {
-    id: "on-category-created",
-    name: "Category Created",
-  },
+  { id: "on-category-created", name: "Category Created" },
   { event: "category/created" },
   async ({ event, step }) => {
     const { categoryId, storeId, name } = event.data;
 
-    // Step 1: Update search index
     await step.run("update-search-index", async () => {
       console.log(`[search] Indexing category: ${name} (${categoryId})`);
       return { indexed: true };
     });
 
-    // Step 2: Invalidate cache
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`categories:${storeId}`, `category:${categoryId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`categories:${storeId}`),
+        cacheDelete(`category:${categoryId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -65,28 +52,21 @@ export const onCategoryCreated = inngest.createFunction(
 
 // ── Brand Created ─────────────────────────────────────────────────────────────
 export const onBrandCreated = inngest.createFunction(
-  {
-    id: "on-brand-created",
-    name: "Brand Created",
-  },
+  { id: "on-brand-created", name: "Brand Created" },
   { event: "brand/created" },
   async ({ event, step }) => {
     const { brandId, storeId, name } = event.data;
 
-    // Step 1: Update search index
     await step.run("update-search-index", async () => {
       console.log(`[search] Indexing brand: ${name} (${brandId})`);
       return { indexed: true };
     });
 
-    // Step 2: Invalidate cache
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`brands:${storeId}`, `brand:${brandId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`brands:${storeId}`),
+        cacheDelete(`brand:${brandId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -96,28 +76,21 @@ export const onBrandCreated = inngest.createFunction(
 
 // ── Collection Created ────────────────────────────────────────────────────────
 export const onCollectionCreated = inngest.createFunction(
-  {
-    id: "on-collection-created",
-    name: "Collection Created",
-  },
+  { id: "on-collection-created", name: "Collection Created" },
   { event: "collection/created" },
   async ({ event, step }) => {
     const { collectionId, storeId, name } = event.data;
 
-    // Step 1: Update search index
     await step.run("update-search-index", async () => {
       console.log(`[search] Indexing collection: ${name} (${collectionId})`);
       return { indexed: true };
     });
 
-    // Step 2: Invalidate cache
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`collections:${storeId}`, `collection:${collectionId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`collections:${storeId}`),
+        cacheDelete(`collection:${collectionId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -127,21 +100,17 @@ export const onCollectionCreated = inngest.createFunction(
 
 // ── Tag Updated ───────────────────────────────────────────────────────────────
 export const onTagUpdated = inngest.createFunction(
-  {
-    id: "on-tag-updated",
-    name: "Tag Updated",
-  },
+  { id: "on-tag-updated", name: "Tag Updated" },
   { event: "tag/updated" },
   async ({ event, step }) => {
     const { tagId, storeId } = event.data;
 
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`tags:${storeId}`, `tag:${tagId}`, `products:${storeId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`tags:${storeId}`),
+        cacheDelete(`tag:${tagId}`),
+        cacheDelete(`products:${storeId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -151,21 +120,17 @@ export const onTagUpdated = inngest.createFunction(
 
 // ── Category Updated ──────────────────────────────────────────────────────────
 export const onCategoryUpdated = inngest.createFunction(
-  {
-    id: "on-category-updated",
-    name: "Category Updated",
-  },
+  { id: "on-category-updated", name: "Category Updated" },
   { event: "category/updated" },
   async ({ event, step }) => {
     const { categoryId, storeId } = event.data;
 
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`categories:${storeId}`, `category:${categoryId}`, `products:${storeId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`categories:${storeId}`),
+        cacheDelete(`category:${categoryId}`),
+        cacheDelete(`products:${storeId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -175,21 +140,17 @@ export const onCategoryUpdated = inngest.createFunction(
 
 // ── Brand Updated ─────────────────────────────────────────────────────────────
 export const onBrandUpdated = inngest.createFunction(
-  {
-    id: "on-brand-updated",
-    name: "Brand Updated",
-  },
+  { id: "on-brand-updated", name: "Brand Updated" },
   { event: "brand/updated" },
   async ({ event, step }) => {
     const { brandId, storeId } = event.data;
 
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`brands:${storeId}`, `brand:${brandId}`, `products:${storeId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`brands:${storeId}`),
+        cacheDelete(`brand:${brandId}`),
+        cacheDelete(`products:${storeId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -199,21 +160,17 @@ export const onBrandUpdated = inngest.createFunction(
 
 // ── Collection Updated ────────────────────────────────────────────────────────
 export const onCollectionUpdated = inngest.createFunction(
-  {
-    id: "on-collection-updated",
-    name: "Collection Updated",
-  },
+  { id: "on-collection-updated", name: "Collection Updated" },
   { event: "collection/updated" },
   async ({ event, step }) => {
     const { collectionId, storeId } = event.data;
 
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`collections:${storeId}`, `collection:${collectionId}`, `products:${storeId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`collections:${storeId}`),
+        cacheDelete(`collection:${collectionId}`),
+        cacheDelete(`products:${storeId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -223,21 +180,17 @@ export const onCollectionUpdated = inngest.createFunction(
 
 // ── Tag Deleted ───────────────────────────────────────────────────────────────
 export const onTagDeleted = inngest.createFunction(
-  {
-    id: "on-tag-deleted",
-    name: "Tag Deleted",
-  },
+  { id: "on-tag-deleted", name: "Tag Deleted" },
   { event: "tag/deleted" },
   async ({ event, step }) => {
     const { tagId, storeId } = event.data;
 
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`tags:${storeId}`, `tag:${tagId}`, `products:${storeId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`tags:${storeId}`),
+        cacheDelete(`tag:${tagId}`),
+        cacheDelete(`products:${storeId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -247,21 +200,17 @@ export const onTagDeleted = inngest.createFunction(
 
 // ── Category Deleted ──────────────────────────────────────────────────────────
 export const onCategoryDeleted = inngest.createFunction(
-  {
-    id: "on-category-deleted",
-    name: "Category Deleted",
-  },
+  { id: "on-category-deleted", name: "Category Deleted" },
   { event: "category/deleted" },
   async ({ event, step }) => {
     const { categoryId, storeId } = event.data;
 
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`categories:${storeId}`, `category:${categoryId}`, `products:${storeId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`categories:${storeId}`),
+        cacheDelete(`category:${categoryId}`),
+        cacheDelete(`products:${storeId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -271,21 +220,17 @@ export const onCategoryDeleted = inngest.createFunction(
 
 // ── Brand Deleted ─────────────────────────────────────────────────────────────
 export const onBrandDeleted = inngest.createFunction(
-  {
-    id: "on-brand-deleted",
-    name: "Brand Deleted",
-  },
+  { id: "on-brand-deleted", name: "Brand Deleted" },
   { event: "brand/deleted" },
   async ({ event, step }) => {
     const { brandId, storeId } = event.data;
 
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`brands:${storeId}`, `brand:${brandId}`, `products:${storeId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`brands:${storeId}`),
+        cacheDelete(`brand:${brandId}`),
+        cacheDelete(`products:${storeId}`),
+      ]);
       return { invalidated: true };
     });
 
@@ -295,21 +240,17 @@ export const onBrandDeleted = inngest.createFunction(
 
 // ── Collection Deleted ────────────────────────────────────────────────────────
 export const onCollectionDeleted = inngest.createFunction(
-  {
-    id: "on-collection-deleted",
-    name: "Collection Deleted",
-  },
+  { id: "on-collection-deleted", name: "Collection Deleted" },
   { event: "collection/deleted" },
   async ({ event, step }) => {
     const { collectionId, storeId } = event.data;
 
     await step.run("invalidate-cache", async () => {
-      await inngest.send({
-        name: "cache/invalidate",
-        data: {
-          keys: [`collections:${storeId}`, `collection:${collectionId}`, `products:${storeId}`],
-        },
-      });
+      await Promise.allSettled([
+        cacheDelete(`collections:${storeId}`),
+        cacheDelete(`collection:${collectionId}`),
+        cacheDelete(`products:${storeId}`),
+      ]);
       return { invalidated: true };
     });
 

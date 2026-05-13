@@ -46,6 +46,7 @@ function DesignPageContent({
   const [page, setPage] = useState<PageData | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Latest content ref — updated by Puck's onChange without causing re-renders
   const latestData = useRef<Data | null>(null);
@@ -59,10 +60,10 @@ function DesignPageContent({
           setPage(data);
           latestData.current = data.content;
         } else {
-          router.push(`/store/${storeId}/pages`);
+          router.push(`/admin/store/${storeId}/pages`);
         }
       } catch {
-        router.push(`/store/${storeId}/pages`);
+        router.push(`/admin/store/${storeId}/pages`);
       } finally {
         setIsLoading(false);
       }
@@ -98,9 +99,14 @@ function DesignPageContent({
               ? { ...prev, isPublished: updated.isPublished, title: updated.title }
               : updated
           );
+          setSaveError(null);
+        } else {
+          const err = await response.json().catch(() => ({}));
+          setSaveError(err.error || "Failed to save. Please try again.");
         }
       } catch (err) {
         console.error("Save failed:", err);
+        setSaveError("Network error. Please check your connection.");
       } finally {
         setIsSaving(false);
       }
@@ -131,7 +137,7 @@ function DesignPageContent({
       <div className="h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <p className="text-zinc-900 font-semibold mb-2">Page not found</p>
-          <Link href={`/store/${storeId}/pages`}>
+          <Link href={`/admin/store/${storeId}/pages`}>
             <Button size="sm" variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Pages
@@ -148,7 +154,7 @@ function DesignPageContent({
       <header className="h-12 bg-white border-b border-zinc-200 flex items-center justify-between px-4 shrink-0 z-50">
         {/* Left */}
         <div className="flex items-center gap-3">
-          <Link href={`/store/${storeId}/pages`}>
+          <Link href={`/admin/store/${storeId}/pages`}>
             <button className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
               <ArrowLeft className="w-4 h-4" />
               Pages
@@ -175,6 +181,11 @@ function DesignPageContent({
 
         {/* Right */}
         <div className="flex items-center gap-2">
+          {saveError && (
+            <span className="text-xs text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded-lg max-w-48 truncate" title={saveError}>
+              {saveError}
+            </span>
+          )}
           {page.isPublished && (
             <Link href={`/${page.slug}`} target="_blank">
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">

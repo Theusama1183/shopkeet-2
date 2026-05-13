@@ -74,7 +74,6 @@ export default function EditPagePage({
         } else {
           router.push(`/store/${storeId}/pages`);
         }
-        if (sRes.ok) setStore(await sRes.json());
       } finally {
         setIsLoading(false);
       }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLoadingStore } from '@/lib/stores';
-import { useEffect } from 'react';
+import { useQueryLoading } from './use-query-loading';
 
 // Query keys
 export const tagKeys = {
@@ -96,48 +95,26 @@ async function deleteTagApi(storeId: string, tagId: string): Promise<void> {
 
 // Hooks
 export function useTags(storeId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: tagKeys.list(storeId),
     queryFn: () => fetchTags(storeId),
     enabled: !!storeId,
-    staleTime: 1000 * 60 * 5, // 5 minutes - tags don't change frequently
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`tags-${storeId}`);
-    } else {
-      stopLoading(`tags-${storeId}`);
-    }
-    return () => stopLoading(`tags-${storeId}`);
-  }, [query.isLoading, storeId, startLoading, stopLoading]);
-  
+  useQueryLoading(`tags-${storeId}`, query.isLoading);
   return query;
 }
 
 export function useTag(storeId: string, tagId: string) {
-  const { startLoading, stopLoading } = useLoadingStore();
-  
   const query = useQuery({
     queryKey: tagKeys.detail(tagId),
     queryFn: () => fetchTag(storeId, tagId),
     enabled: !!storeId && !!tagId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10,   // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
-  
-  useEffect(() => {
-    if (query.isLoading) {
-      startLoading(`tag-${tagId}`);
-    } else {
-      stopLoading(`tag-${tagId}`);
-    }
-    return () => stopLoading(`tag-${tagId}`);
-  }, [query.isLoading, tagId, startLoading, stopLoading]);
-  
+  useQueryLoading(`tag-${tagId}`, query.isLoading);
   return query;
 }
 
