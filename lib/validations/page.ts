@@ -19,6 +19,19 @@ const puckContentSchema = z.object({
   }).optional(),
 });
 
+// Max Puck JSON size: 512KB — prevents huge payloads slowing queries/rendering
+const MAX_PUCK_JSON_BYTES = 512 * 1024;
+
+function validatePuckContent(val: unknown): boolean {
+  try {
+    const json = JSON.stringify(val);
+    if (json.length > MAX_PUCK_JSON_BYTES) return false;
+    return puckContentSchema.safeParse(val).success;
+  } catch {
+    return false;
+  }
+}
+
 export const createPageSchema = z.object({
   title: z
     .string()
@@ -28,7 +41,6 @@ export const createPageSchema = z.object({
   slug: slugSchema,
   content: z.record(z.string(), z.unknown()).refine(
     (val) => {
-      // Must be a valid Puck data structure
       const result = puckContentSchema.safeParse(val);
       return result.success;
     },
@@ -67,11 +79,8 @@ export const updatePageSchema = z.object({
   content: z
     .record(z.string(), z.unknown())
     .refine(
-      (val) => {
-        const result = puckContentSchema.safeParse(val);
-        return result.success;
-      },
-      "Content must be a valid Puck page structure with 'content' array and 'root' object"
+      validatePuckContent,
+      "Content must be a valid Puck page structure (max 512KB) with 'content' array and 'root' object"
     )
     .optional(),
   layoutId: z

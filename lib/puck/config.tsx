@@ -1,5 +1,6 @@
 import { Config } from "@puckeditor/core";
 import type { CustomField } from "@puckeditor/core";
+import DOMPurify from "isomorphic-dompurify";
 import {
   ShoppingCart, Star, ArrowRight,
   Play, Package, Tag, Heart, Eye,
@@ -409,12 +410,18 @@ export const config: Config<any> = {
       render: ({ content, align, maxWidth }) => {
         const widthMap: Record<string, string> = { narrow: "max-w-[600px]", medium: "max-w-[800px]", wide: "max-w-[1000px]", full: "max-w-full" };
         const alignMap: Record<string, string> = { left: "text-left", center: "text-center mx-auto", right: "text-right ml-auto" };
+        // Sanitize content to prevent XSS — strips all HTML tags and attributes
+        // except a safe allowlist (bold, italic, links, lists)
+        const sanitized = DOMPurify.sanitize(content, {
+          ALLOWED_TAGS: ["b", "i", "em", "strong", "a", "ul", "ol", "li", "br", "p", "span"],
+          ALLOWED_ATTR: ["href", "target", "rel"],
+          FORCE_BODY: true,
+        });
         return (
-          <div className={`py-4 px-6 ${widthMap[maxWidth]} ${alignMap[align]}`}>
-            {content.split("\n").map((para: string, i: number) => (
-              <p key={i} className="text-zinc-600 leading-relaxed mb-4 last:mb-0">{para}</p>
-            ))}
-          </div>
+          <div
+            className={`py-4 px-6 ${widthMap[maxWidth]} ${alignMap[align]} prose prose-zinc max-w-none`}
+            dangerouslySetInnerHTML={{ __html: sanitized }}
+          />
         );
       },
     },
@@ -1602,12 +1609,16 @@ export const config: Config<any> = {
                     </div>
                   )}
                   {leftContent && (
-                    <div className="prose prose-zinc max-w-none">
-                      {leftContent.split('\n').map((paragraph: string, i: number) => (
-                        <p key={i} className="text-zinc-600 leading-relaxed mb-4 last:mb-0">{paragraph}</p>
-                      ))}
-                    </div>
-                  )}
+                    <div
+                      className="prose prose-zinc max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(leftContent, {
+                          ALLOWED_TAGS: ["b", "i", "em", "strong", "a", "ul", "ol", "li", "br", "p", "span"],
+                          ALLOWED_ATTR: ["href", "target", "rel"],
+                          FORCE_BODY: true,
+                        }),
+                      }}
+                    />
                 </div>
 
                 {/* Right Column */}
@@ -1618,12 +1629,16 @@ export const config: Config<any> = {
                     </div>
                   )}
                   {rightContent && (
-                    <div className="prose prose-zinc max-w-none">
-                      {rightContent.split('\n').map((paragraph: string, i: number) => (
-                        <p key={i} className="text-zinc-600 leading-relaxed mb-4 last:mb-0">{paragraph}</p>
-                      ))}
-                    </div>
-                  )}
+                    <div
+                      className="prose prose-zinc max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(rightContent, {
+                          ALLOWED_TAGS: ["b", "i", "em", "strong", "a", "ul", "ol", "li", "br", "p", "span"],
+                          ALLOWED_ATTR: ["href", "target", "rel"],
+                          FORCE_BODY: true,
+                        }),
+                      }}
+                    />
                 </div>
               </div>
             </div>

@@ -5,6 +5,7 @@ import { Puck, Data } from "@puckeditor/core";
 // CSS imported globally in app/layout.tsx to avoid chunk loading issues
 import { getLayoutConfig } from "@/lib/puck/layouts";
 import { setEditorStoreId } from "@/lib/puck/store-context";
+import { Monitor, Tablet, Smartphone } from "lucide-react";
 
 interface PuckEditorProps {
   /** Initial data — only used on first mount. Changes to this prop are ignored
@@ -16,6 +17,28 @@ interface PuckEditorProps {
   /** Store ID — used by asyncSearchableSelectField to fetch filter options */
   storeId?: string;
 }
+
+// Viewport presets — shown as breakpoint switcher buttons in the Puck toolbar
+const VIEWPORTS = [
+  {
+    width: 1280,
+    height: "auto" as const,
+    label: "Desktop",
+    icon: <Monitor size={14} />,
+  },
+  {
+    width: 768,
+    height: "auto" as const,
+    label: "Tablet",
+    icon: <Tablet size={14} />,
+  },
+  {
+    width: 390,
+    height: "auto" as const,
+    label: "Mobile",
+    icon: <Smartphone size={14} />,
+  },
+];
 
 export function PuckEditor({ data, onPublish, onSave, storeId }: PuckEditorProps) {
   // Capture initial data once — never update this ref so Puck never remounts
@@ -54,6 +77,7 @@ export function PuckEditor({ data, onPublish, onSave, storeId }: PuckEditorProps
         headerTitle="Page Editor"
         headerPath="/"
         iframe={{ enabled: true }}
+        viewports={VIEWPORTS}
       />
     </div>
   );

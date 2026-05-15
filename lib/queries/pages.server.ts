@@ -237,17 +237,61 @@ export async function getPageBySlug(storeId: string, slug: string) {
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116') {
-      // No rows found
-      return null;
-    }
+    if (error.code === 'PGRST116') return null;
     console.error('Error fetching page by slug:', error);
     return null;
   }
 
   if (!data) return null;
 
-  // Normalize to camelCase so all consumers get consistent shape
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw = data as any;
+  return {
+    id: raw.id,
+    title: raw.title,
+    slug: raw.slug,
+    content: raw.content,
+    layoutId: raw.layout_id,
+    isHome: raw.is_home,
+    isPublished: raw.is_published,
+    metaTitle: raw.meta_title,
+    metaDescription: raw.meta_description,
+    storeId: raw.store_id,
+    createdAt: raw.created_at,
+    updatedAt: raw.updated_at,
+  };
+}
+
+/**
+ * Draft preview — fetches a page regardless of is_published status.
+ * The `previewToken` must match the page's own ID to prevent guessing.
+ * Used by the ?preview=<pageId> query param in the storefront.
+ */
+export async function getPageBySlugUnpublished(
+  storeId: string,
+  slug: string,
+  previewToken: string
+) {
+  const db = getAnonDatabase();
+
+  const { data, error } = await db
+    .from('pages')
+    .select('*')
+    .eq('store_id', storeId)
+    .eq('slug', slug)
+    .eq('id', previewToken)   // token must equal the page's own ID
+    .is('deleted_at', null)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    console.error('Error fetching draft page:', error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = data as any;
   return {
     id: raw.id,

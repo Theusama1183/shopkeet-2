@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getPageById, updatePage, deletePage, isSlugAvailable } from "@/lib/queries/pages.server";
-import { getDatabase } from "@/lib/supabase/database";
+import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
 import { rateLimits, checkRateLimit } from "@/lib/redis/rate-limit";
 import { updatePageSchema } from "@/lib/validations/page";
 import { invalidateTag } from "@/lib/cache-helpers";
@@ -145,6 +145,25 @@ export async function PUT(
 
     if (!updatedPage) {
       return NextResponse.json({ error: "Failed to update page" }, { status: 500 });
+    }
+
+    // ── Snapshot version (fire-and-forget) ───────────────────────────────────
+    // Save a version snapshot whenever content changes.
+    // Uses service role so it works even if RLS is restrictive.
+    if (data.content) {
+      const serviceDb = getServiceRoleDatabase();
+      serviceDb
+        .from("page_versions")
+        .insert({
+          page_id:    pageId,
+          store_id:   id,
+          content:    data.content,
+          title:      updatedPage.title,
+          created_by: user.id,
+        })
+        .then(({ error: vErr }) => {
+          if (vErr) console.error("[page_versions] Failed to save version:", vErr);
+        });
     }
 
     // Invalidate ISR cache

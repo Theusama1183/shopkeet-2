@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { notFound, redirect } from "next/navigation";
-import { getPageBySlug } from "@/lib/queries/pages.server";
+import { getPageBySlug, getPageBySlugUnpublished } from "@/lib/queries/pages.server";
 import { resolveStoreCached, parseSubdomain } from "@/lib/queries/store.server";
 import { PuckRenderer } from "@/components/puck/renderer";
 import type { Metadata } from "next";
@@ -11,7 +11,6 @@ export const revalidate = 300;
 // ── Pre-render top stores at build time ───────────────────────────────────────
 export async function generateStaticParams() {
   try {
-    // Import here to avoid edge-runtime issues with the module at build time
     const { getAnonDatabase } = await import("@/lib/supabase/database");
     const db = getAnonDatabase();
     const { data: topStores } = await db
@@ -25,7 +24,11 @@ export async function generateStaticParams() {
     for (const store of topStores || []) {
       const s = store as { subdomain: string | null; custom_domain: string | null };
       const domain = s.subdomain || s.custom_domain;
-      if (domain) params.push({ domain, slug: "home" });
+      if (domain) {
+        // Pre-render both the home slug and a generic "home" slug
+        params.push({ domain, slug: "home" });
+        params.push({ domain, slug: "index" });
+      }
     }
     return params;
   } catch {
@@ -35,6 +38,7 @@ export async function generateStaticParams() {
 
 interface PageProps {
   params: Promise<{ domain: string; slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }
 
 // ── Cached page resolver — keyed per store+slug ───────────────────────────────
@@ -46,8 +50,7 @@ function resolvePageCached(storeId: string, slug: string) {
   );
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { domain, slug } = await params;
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {  const { domain, slug } = await params;
   const decodedDomain = decodeURIComponent(domain);
   const subdomain = parseSubdomain(decodedDomain);
 
@@ -68,22 +71,42 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function StorePage({ params }: PageProps) {
+export default async function StorePage({ params, searchParams }: PageProps) {
   const { domain, slug } = await params;
+  const { preview } = await searchParams;
   const decodedDomain = decodeURIComponent(domain);
   const subdomain = parseSubdomain(decodedDomain);
 
   const store = await resolveStoreCached(subdomain, decodedDomain)();
   if (!store) notFound();
 
-  const page = await resolvePageCached(store.id, slug)();
+  // ── Preview mode: ?preview=<pageId> bypasses is_published check ─────────
+  // The token is the pageId — simple guard against accidental public access.
+  // Not a security boundary — just prevents draft pages from being indexed.
+  let page;
+  if (preview) {
+    // Fetch unpublished page directly (no cache — always fresh in preview)
+    page = await getPageBySlugUnpublished(store.id, slug, preview);
+  } else {
+    page = await resolvePageCached(store.id, slug)();
+  }
+
   if (!page) notFound();
 
   // If this page is the home page, redirect to / to avoid duplicate URLs
   if (page.isHome) redirect("/");
 
+  // Guard against DB corruption — content must be a valid object
+  if (!page.content || typeof page.content !== "object") notFound();
+
   return (
     <div className="min-h-screen">
+      {/* Draft preview banner */}
+      {preview && !page.isPublished && (
+        <div className="w-full bg-amber-500 text-white text-xs font-medium text-center py-2 px-4">
+          ⚠️ Preview mode — this page is not published and not visible to customers
+        </div>
+      )}
       <PuckRenderer data={page.content} layoutId={page.layoutId ?? undefined} storeId={store.id} />
     </div>
   );

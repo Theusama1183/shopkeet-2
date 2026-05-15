@@ -77,34 +77,73 @@ export function fileUploaderField({
     render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
       const [dragging, setDragging] = useState(false);
       const [urlInput, setUrlInput] = useState('');
+      const [uploading, setUploading] = useState(false);
+      const [uploadError, setUploadError] = useState('');
       const inputRef = useRef<HTMLInputElement>(null);
 
-      const handleFile = (file: File) => {
-        const reader = new FileReader();
-        reader.onload = (e) => onChange(e.target?.result as string);
-        reader.readAsDataURL(file);
+      // Upload to R2 via /api/upload — returns a permanent CDN URL.
+      // Falls back to base64 if the upload API is not configured.
+      const handleFile = async (file: File) => {
+        // Client-side size guard: 10MB max
+        if (file.size > 10 * 1024 * 1024) {
+          setUploadError('File too large (max 10MB)');
+          return;
+        }
+        setUploading(true);
+        setUploadError('');
+        try {
+          const formData = new FormData();
+          formData.append('files', file);
+          formData.append('folder', 'puck');
+          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+          if (res.ok) {
+            const data = await res.json();
+            const url = data.files?.[0]?.url;
+            if (url) { onChange(url); return; }
+          }
+          // Upload API not configured or failed — fall back to base64
+          const reader = new FileReader();
+          reader.onload = (e) => onChange(e.target?.result as string);
+          reader.readAsDataURL(file);
+        } catch {
+          // Network error — fall back to base64
+          const reader = new FileReader();
+          reader.onload = (e) => onChange(e.target?.result as string);
+          reader.readAsDataURL(file);
+        } finally {
+          setUploading(false);
+        }
       };
 
       return (
         <FieldLabel label={label}>
           <div className="space-y-2">
             <div
-              className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-all cursor-pointer ${dragging ? 'border-violet-400 bg-violet-50' : 'border-gray-200 bg-gray-50 hover:border-violet-300 hover:bg-violet-50/50'}`}
+              className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-all cursor-pointer ${dragging ? 'border-violet-400 bg-violet-50' : 'border-gray-200 bg-gray-50 hover:border-violet-300 hover:bg-violet-50/50'} ${uploading ? 'opacity-60 pointer-events-none' : ''}`}
               onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
               onDragLeave={() => setDragging(false)}
               onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-              onClick={() => inputRef.current?.click()}
+              onClick={() => !uploading && inputRef.current?.click()}
             >
               <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
-              {value ? (
+              {uploading ? (
+                <div className="text-center">
+                  <div className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-1" />
+                  <p className="text-xs text-gray-500">Uploading…</p>
+                </div>
+              ) : value ? (
                 <img src={value} alt="preview" className="max-h-32 rounded-lg object-contain" />
               ) : (
                 <div className="text-center">
                   <div className="text-2xl mb-1">📁</div>
                   <p className="text-xs text-gray-500">Drag & drop or click to upload</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Max 10MB</p>
                 </div>
               )}
             </div>
+            {uploadError && (
+              <p className="text-xs text-red-500">{uploadError}</p>
+            )}
             <div className="flex gap-2">
               <input
                 className={inputCls}
