@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ProductFormData, ProductStatus } from "@/lib/types/product";
+import type { MediaFile } from "@/components/ui/media-uploader";
 import { EMPTY_FORM } from "@/lib/types/product";
 import { useCreateProduct, useUpdateProduct, productKeys } from "@/lib/queries";
 import {
@@ -88,16 +89,28 @@ export function ProductForm({ storeId, productId, mode }: ProductFormProps) {
       .then((r) => r.json())
       .then((data) => {
         const meta = (data.meta as Record<string, string>) ?? {};
+        const defaults = { ...EMPTY_FORM };
+
+        // Derive status from is_active boolean
+        const status: ProductStatus = data.is_active === false ? "draft" : "active";
+
+        // Build images array from image URL if no images array exists
+        let images: MediaFile[] = data.images ?? [];
+        if (images.length === 0 && data.image) {
+          images = [{ id: "imported-0", url: data.image, name: "Product image", type: "image", size: 0 }];
+        }
+
         setForm({
+          ...defaults,
           name:             data.name ?? "",
           description:      data.description ?? "",
           shortDescription: meta.shortDescription ?? "",
           productType:      meta.productType ?? "",
           vendor:           meta.vendor ?? "",
-          status:           (data.status ?? "draft") as ProductStatus,
+          status,
           publishedAt:      data.publishedAt ?? "",
           tags:             data.tags ?? [],
-          images:           data.images ?? [],
+          images,
           price:            centsToDisplay(data.price),
           compareAtPrice:   centsToDisplay(data.compareAtPrice),
           costPerItem:      centsToDisplay(data.costPerItem),
@@ -171,6 +184,7 @@ export function ProductForm({ storeId, productId, mode }: ProductFormProps) {
       image:            form.images[0]?.url ?? null,
       images:           form.images,
       status:           statusOverride ?? form.status,
+      is_active:        (statusOverride ?? form.status) === "active",
       publishedAt:      form.publishedAt || null,
       tags:             form.tags,
       taxable:          form.taxable,

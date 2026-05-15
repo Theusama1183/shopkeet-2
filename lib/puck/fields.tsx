@@ -275,48 +275,162 @@ export function toggleButtonField({
 
 // ─── 5. colorPickerField ─────────────────────────────────────────────────────
 
-const SWATCHES = ['#000000', '#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280'];
+const COLOR_OPTIONS = [
+  { label: 'Black', value: '#000000' },
+  { label: 'White', value: '#ffffff' },
+  { label: 'Red', value: '#ef4444' },
+  { label: 'Orange', value: '#f97316' },
+  { label: 'Yellow', value: '#eab308' },
+  { label: 'Green', value: '#22c55e' },
+  { label: 'Blue', value: '#3b82f6' },
+  { label: 'Violet', value: '#8b5cf6' },
+  { label: 'Pink', value: '#ec4899' },
+  { label: 'Gray', value: '#6b7280' },
+];
 
 export function colorPickerField({
   label = 'Color',
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   icon: _icon,
   presets,
-}: { label?: string; icon?: React.ReactNode; presets?: string[] } = {}) {
+}: {
+  label?: string;
+  icon?: React.ReactNode;
+  presets?: string[];
+} = {}) {
   return {
     type: 'custom' as const,
     label,
-    render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
-      const swatches = presets ?? SWATCHES;
-      const [hex, setHex] = useState(value || '#000000');
+    render: ({
+      value,
+      onChange,
+    }: {
+      value: string;
+      onChange: (v: string) => void;
+    }) => {
+      const colors = presets
+        ? presets.map((color) => ({
+          label: color,
+          value: color,
+        }))
+        : COLOR_OPTIONS;
 
-      useEffect(() => { setHex(value || '#000000'); }, [value]);
+      const [hex, setHex] = useState(value || '#000000');
+      const [search, setSearch] = useState('');
+      const [open, setOpen] = useState(false);
+      const ref = useRef<HTMLDivElement>(null);
+
+      const selected = colors.find((c) => c.value === value);
+
+      const filtered = colors.filter((c) =>
+        `${c.label} ${c.value}`.toLowerCase().includes(search.toLowerCase())
+      );
+
+      useEffect(() => {
+        setHex(value || '#000000');
+      }, [value]);
+
+      useEffect(() => {
+        const handler = (e: MouseEvent) => {
+          if (ref.current && !ref.current.contains(e.target as Node)) {
+            setOpen(false);
+          }
+        };
+
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+      }, []);
 
       return (
         <FieldLabel label={label}>
           <div className="space-y-2">
-            <div className="flex flex-wrap gap-1.5">
-              {swatches.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => { onChange(c); setHex(c); }}
-                  className={`w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 ${value === c ? 'border-violet-500 scale-110' : 'border-transparent'}`}
-                  style={{ backgroundColor: c }}
-                  title={c}
-                />
-              ))}
+            <div ref={ref} className="relative">
+              <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className={`${inputCls} flex items-center justify-between text-left`}
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-4 w-4 rounded-full border border-gray-300"
+                    style={{ backgroundColor: value || hex }}
+                  />
+                  <span>{selected?.label ?? value ?? 'Select color…'}</span>
+                </span>
+
+                <span className="ml-2 text-gray-400">▾</span>
+              </button>
+
+              {open && (
+                <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-xl">
+                  <div className="border-b border-gray-100 p-2">
+                    <input
+                      autoFocus
+                      className={inputCls}
+                      placeholder="Search color…"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="max-h-56 overflow-y-auto">
+                    {filtered.map((color) => (
+                      <button
+                        type="button"
+                        key={color.value}
+                        onClick={() => {
+                          setHex(color.value);
+                          onChange(color.value);
+                          setOpen(false);
+                          setSearch('');
+                        }}
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:bg-violet-50 ${color.value === value
+                            ? 'bg-violet-50 font-medium text-violet-600'
+                            : 'text-gray-700'
+                          }`}
+                      >
+                        <span
+                          className="h-4 w-4 rounded-full border border-gray-300"
+                          style={{ backgroundColor: color.value }}
+                        />
+                        <span>{color.label}</span>
+                        <span className="ml-auto text-xs text-gray-400">
+                          {color.value}
+                        </span>
+                      </button>
+                    ))}
+
+                    {filtered.length === 0 && (
+                      <p className="px-3 py-2 text-xs text-gray-400">
+                        No results
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex gap-2 items-center">
+
+            <div className="flex items-center gap-2">
               <input
                 type="color"
                 value={hex}
-                onChange={(e) => { setHex(e.target.value); onChange(e.target.value); }}
-                className="w-9 h-9 rounded-lg border border-gray-200 cursor-pointer p-0.5"
+                onChange={(e) => {
+                  setHex(e.target.value);
+                  onChange(e.target.value);
+                }}
+                className="h-9 w-9 cursor-pointer rounded-lg border border-gray-200 p-0.5"
               />
+
               <input
                 className={inputCls}
                 value={hex}
-                onChange={(e) => { setHex(e.target.value); if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) onChange(e.target.value); }}
+                onChange={(e) => {
+                  setHex(e.target.value);
+
+                  if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+                    onChange(e.target.value);
+                  }
+                }}
                 placeholder="#000000"
                 maxLength={7}
               />
@@ -1635,6 +1749,122 @@ export function positionField({ label = 'Position' }: { label?: string } = {}) {
                 ))}
               </div>
             </div>
+          </div>
+        </FieldLabel>
+      );
+    },
+  };
+}
+
+// ─── 11. asyncSearchableSelectField ──────────────────────────────────────────
+//
+// Like searchableSelectField but fetches options from a URL at render time.
+// Used in the Puck editor sidebar to populate store-specific dropdowns
+// (collections, categories, brands, tags) without hardcoding options.
+//
+// `fetchUrl` can be a string OR a function — the function form is evaluated
+// lazily at render time so it can read getEditorStoreId() after the editor
+// has mounted and called setEditorStoreId().
+//
+// Results must be { id, name }[]. An "All" option (value = "") is prepended.
+
+export function asyncSearchableSelectField({
+  label = 'Select',
+  fetchUrl,
+  placeholder = 'All',
+  icon: _icon,
+}: {
+  label?: string;
+  /** URL to GET, or a function returning the URL (evaluated at render time) */
+  fetchUrl: string | (() => string);
+  placeholder?: string;
+  icon?: React.ReactNode;
+}) {
+  return {
+    type: 'custom' as const,
+    label,
+    render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+      const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
+      const [loading, setLoading] = useState(true);
+      const [search, setSearch] = useState('');
+      const [open, setOpen] = useState(false);
+      const ref = useRef<HTMLDivElement>(null);
+
+      // Resolve URL lazily — function form reads getEditorStoreId() at render time
+      const resolvedUrl = typeof fetchUrl === 'function' ? fetchUrl() : fetchUrl;
+
+      // Fetch options once on mount (or when resolvedUrl changes)
+      useEffect(() => {
+        if (!resolvedUrl) { setLoading(false); return; }
+        setLoading(true);
+        fetch(resolvedUrl)
+          .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+          .then((data: { id: string; name: string }[]) => {
+            setOptions([
+              { value: '', label: placeholder },
+              ...data.map((d) => ({ value: d.id, label: d.name })),
+            ]);
+          })
+          .catch(() => {
+            setOptions([{ value: '', label: placeholder }]);
+          })
+          .finally(() => setLoading(false));
+      }, [resolvedUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+      // Close on outside click
+      useEffect(() => {
+        const handler = (e: MouseEvent) => {
+          if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+      }, []);
+
+      const filtered = options.filter((o) =>
+        o.label.toLowerCase().includes(search.toLowerCase())
+      );
+      const selected = options.find((o) => o.value === value);
+
+      return (
+        <FieldLabel label={label}>
+          <div ref={ref} className="relative">
+            <button
+              onClick={() => setOpen(!open)}
+              disabled={loading}
+              className={`${inputCls} flex items-center justify-between text-left ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+            >
+              <span className={selected?.value ? 'text-gray-800' : 'text-gray-400'}>
+                {loading ? 'Loading…' : (selected?.label ?? placeholder)}
+              </span>
+              <span className="text-gray-400 ml-2">▾</span>
+            </button>
+            {open && !loading && (
+              <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-xl">
+                <div className="p-2 border-b border-gray-100">
+                  <input
+                    autoFocus
+                    className={inputCls}
+                    placeholder="Search…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto">
+                  {filtered.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { onChange(opt.value); setOpen(false); setSearch(''); }}
+                      className={`w-full text-left px-3 py-2 text-sm transition hover:bg-violet-50 ${opt.value === value ? 'text-violet-600 font-medium bg-violet-50' : 'text-gray-700'}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                  {filtered.length === 0 && (
+                    <p className="px-3 py-2 text-xs text-gray-400">No results</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </FieldLabel>
       );

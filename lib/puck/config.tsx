@@ -1,7 +1,7 @@
 import { Config } from "@puckeditor/core";
 import type { CustomField } from "@puckeditor/core";
 import {
-  ShoppingCart, Star, ChevronLeft, ChevronRight, ArrowRight,
+  ShoppingCart, Star, ArrowRight,
   Play, Package, Tag, Heart, Eye,
   Instagram, Twitter, Facebook, Youtube, Mail, Phone, MapPin,
   AlignLeft, AlignCenter, AlignRight,
@@ -16,7 +16,11 @@ import {
   colorPickerField,
   sliderField,
   buttonGroupField,
+  asyncSearchableSelectField,
 } from "@/lib/puck/fields";
+import { useStoreId, getEditorStoreId } from "@/lib/puck/store-context";
+import { ProductGrid, ProductCarousel } from "@/components/puck/product-grid";
+import { CountdownTimer } from "@/components/puck/countdown-timer";
 
 
 // Cast helper — Puck's Config<Props> enforces strict literal types per field,
@@ -652,7 +656,7 @@ export const config: Config<any> = {
     // Product Grid
     ProductGrid: {
       fields: {
-        title: { type: "text", label: "Section Title" },
+        title:    { type: "text", label: "Section Title" },
         subtitle: { type: "text", label: "Section Subtitle" },
         columns: f(buttonGroupField({
           label: "Columns",
@@ -679,11 +683,43 @@ export const config: Config<any> = {
             { value: "shadow",   label: "Shadow" },
           ],
         })),
-        showPrice:    f(toggleButtonField({ label: "Show Price",       onLabel: "Yes", offLabel: "No" })),
-        showBadge:    f(toggleButtonField({ label: "Show Badge",       onLabel: "Yes", offLabel: "No" })),
-        badgeText:    { type: "text", label: "Badge Text (e.g. New, Sale)" },
-        showAddToCart:f(toggleButtonField({ label: "Show Add to Cart", onLabel: "Yes", offLabel: "No" })),
-        limit:        f(sliderField({ label: "Max Products", min: 1, max: 12 })),
+        showPrice:     f(toggleButtonField({ label: "Show Price",       onLabel: "Yes", offLabel: "No" })),
+        showBadge:     f(toggleButtonField({ label: "Show Badge",       onLabel: "Yes", offLabel: "No" })),
+        badgeText:     { type: "text", label: "Badge Text (e.g. New, Sale)" },
+        showAddToCart: f(toggleButtonField({ label: "Show Add to Cart", onLabel: "Yes", offLabel: "No" })),
+        perPage:       f(sliderField({ label: "Products Per Page", min: 4, max: 48, step: 4 })),
+        showPagination:f(toggleButtonField({ label: "Pagination",       onLabel: "On",  offLabel: "Off" })),
+        sort: f(searchableSelectField({
+          label: "Sort By",
+          options: [
+            { value: "newest",     label: "Newest First" },
+            { value: "oldest",     label: "Oldest First" },
+            { value: "price_asc",  label: "Price: Low → High" },
+            { value: "price_desc", label: "Price: High → Low" },
+            { value: "name_asc",   label: "Name A → Z" },
+          ],
+        })),
+        // ── Filters — populated dynamically from the store ──────────────────
+        collectionId: f(asyncSearchableSelectField({
+          label: "Filter by Collection",
+          fetchUrl: () => { const id = getEditorStoreId(); return id ? `/api/storefront/${id}/filters?type=collections` : ""; },
+          placeholder: "All Collections",
+        })),
+        categoryId: f(asyncSearchableSelectField({
+          label: "Filter by Category",
+          fetchUrl: () => { const id = getEditorStoreId(); return id ? `/api/storefront/${id}/filters?type=categories` : ""; },
+          placeholder: "All Categories",
+        })),
+        brandId: f(asyncSearchableSelectField({
+          label: "Filter by Brand",
+          fetchUrl: () => { const id = getEditorStoreId(); return id ? `/api/storefront/${id}/filters?type=brands` : ""; },
+          placeholder: "All Brands",
+        })),
+        tagId: f(asyncSearchableSelectField({
+          label: "Filter by Tag",
+          fetchUrl: () => { const id = getEditorStoreId(); return id ? `/api/storefront/${id}/filters?type=tags` : ""; },
+          placeholder: "All Tags",
+        })),
       },
       defaultProps: {
         title: "Featured Products",
@@ -695,37 +731,37 @@ export const config: Config<any> = {
         showBadge: true,
         badgeText: "New",
         showAddToCart: true,
-        limit: 6,
+        perPage: 12,
+        showPagination: true,
+        sort: "newest",
+        collectionId: "",
+        categoryId: "",
+        brandId: "",
+        tagId: "",
       },
-      render: ({ title, subtitle, columns, gap, cardStyle, showPrice, showBadge, badgeText, showAddToCart, limit }) => {
-        const colMap: Record<number, string> = {
-          2: "grid-cols-1 sm:grid-cols-2",
-          3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-          4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
-        };
-        const gapMap: Record<string, string> = { sm: "gap-3", md: "gap-6", lg: "gap-8" };
+      render: ({ title, subtitle, columns, gap, cardStyle, showPrice, showBadge, badgeText, showAddToCart, perPage, showPagination, sort, collectionId, categoryId, brandId, tagId }) => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const storeId = useStoreId();
         return (
-          <div className="py-12 px-6">
-            {(title || subtitle) && (
-              <div className="text-center mb-10">
-                {title && <h2 className="text-3xl font-heading font-bold text-zinc-900 mb-2">{title}</h2>}
-                {subtitle && <p className="text-zinc-500">{subtitle}</p>}
-              </div>
-            )}
-            <div className={`grid ${colMap[columns]} ${gapMap[gap]} max-w-7xl mx-auto`}>
-              {Array.from({ length: Math.min(limit, 8) }).map((_, i) => (
-                <MockProductCard
-                  key={i}
-                  index={i}
-                  cardStyle={cardStyle}
-                  showPrice={showPrice}
-                  showBadge={showBadge}
-                  badgeText={badgeText}
-                  showAddToCart={showAddToCart}
-                />
-              ))}
-            </div>
-          </div>
+          <ProductGrid
+            storeId={storeId ?? ""}
+            title={title}
+            subtitle={subtitle}
+            columns={Number(columns)}
+            gap={gap}
+            cardStyle={cardStyle}
+            showPrice={showPrice}
+            showBadge={showBadge}
+            badgeText={badgeText}
+            showAddToCart={showAddToCart}
+            perPage={Number(perPage) || 12}
+            showPagination={showPagination}
+            sort={sort}
+            collectionId={collectionId || undefined}
+            categoryId={categoryId || undefined}
+            brandId={brandId || undefined}
+            tagId={tagId || undefined}
+          />
         );
       },
     },
@@ -733,7 +769,7 @@ export const config: Config<any> = {
     // Product Carousel
     ProductCarousel: {
       fields: {
-        title: { type: "text", label: "Section Title" },
+        title:    { type: "text", label: "Section Title" },
         subtitle: { type: "text", label: "Section Subtitle" },
         slidesVisible: f(buttonGroupField({
           label: "Slides Visible",
@@ -757,6 +793,38 @@ export const config: Config<any> = {
         showDots:      f(toggleButtonField({ label: "Show Dots",        onLabel: "Yes", offLabel: "No" })),
         autoplay:      f(toggleButtonField({ label: "Autoplay",         onLabel: "On",  offLabel: "Off" })),
         autoplaySpeed: f(sliderField({ label: "Autoplay Speed (ms)", min: 1000, max: 8000, step: 500 })),
+        limit:         f(sliderField({ label: "Max Products to Load",   min: 4,  max: 48, step: 4 })),
+        sort: f(searchableSelectField({
+          label: "Sort By",
+          options: [
+            { value: "newest",     label: "Newest First" },
+            { value: "oldest",     label: "Oldest First" },
+            { value: "price_asc",  label: "Price: Low → High" },
+            { value: "price_desc", label: "Price: High → Low" },
+            { value: "name_asc",   label: "Name A → Z" },
+          ],
+        })),
+        // ── Filters ─────────────────────────────────────────────────────────
+        collectionId: f(asyncSearchableSelectField({
+          label: "Filter by Collection",
+          fetchUrl: () => { const id = getEditorStoreId(); return id ? `/api/storefront/${id}/filters?type=collections` : ""; },
+          placeholder: "All Collections",
+        })),
+        categoryId: f(asyncSearchableSelectField({
+          label: "Filter by Category",
+          fetchUrl: () => { const id = getEditorStoreId(); return id ? `/api/storefront/${id}/filters?type=categories` : ""; },
+          placeholder: "All Categories",
+        })),
+        brandId: f(asyncSearchableSelectField({
+          label: "Filter by Brand",
+          fetchUrl: () => { const id = getEditorStoreId(); return id ? `/api/storefront/${id}/filters?type=brands` : ""; },
+          placeholder: "All Brands",
+        })),
+        tagId: f(asyncSearchableSelectField({
+          label: "Filter by Tag",
+          fetchUrl: () => { const id = getEditorStoreId(); return id ? `/api/storefront/${id}/filters?type=tags` : ""; },
+          placeholder: "All Tags",
+        })),
       },
       defaultProps: {
         title: "New Arrivals",
@@ -769,54 +837,36 @@ export const config: Config<any> = {
         showDots: true,
         autoplay: false,
         autoplaySpeed: 3000,
+        limit: 12,
+        sort: "newest",
+        collectionId: "",
+        categoryId: "",
+        brandId: "",
+        tagId: "",
       },
-      render: ({ title, subtitle, slidesVisible, cardStyle, showPrice, showAddToCart, showArrows, showDots }) => {
-        const colMap: Record<number, string> = {
-          2: "grid-cols-2",
-          3: "grid-cols-3",
-          4: "grid-cols-4",
-        };
+      render: ({ title, subtitle, slidesVisible, cardStyle, showPrice, showAddToCart, showArrows, showDots, autoplay, autoplaySpeed, limit, sort, collectionId, categoryId, brandId, tagId }) => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const storeId = useStoreId();
         return (
-          <div className="py-12 px-6">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-end justify-between mb-8">
-                <div>
-                  {title && <h2 className="text-3xl font-heading font-bold text-zinc-900">{title}</h2>}
-                  {subtitle && <p className="text-zinc-500 mt-1">{subtitle}</p>}
-                </div>
-                {showArrows && (
-                  <div className="flex gap-2">
-                    <button className="w-10 h-10 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-50 transition-colors">
-                      <ChevronLeft className="w-5 h-5 text-zinc-600" />
-                    </button>
-                    <button className="w-10 h-10 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-50 transition-colors">
-                      <ChevronRight className="w-5 h-5 text-zinc-600" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className={`grid ${colMap[slidesVisible]} gap-6`}>
-                {Array.from({ length: slidesVisible + 1 }).map((_, i) => (
-                  <MockProductCard
-                    key={i}
-                    index={i}
-                    cardStyle={cardStyle}
-                    showPrice={showPrice}
-                    showBadge={false}
-                    badgeText=""
-                    showAddToCart={showAddToCart}
-                  />
-                ))}
-              </div>
-              {showDots && (
-                <div className="flex justify-center gap-2 mt-6">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className={`w-2 h-2 rounded-full transition-all ${i === 0 ? "bg-violet-600 w-6" : "bg-zinc-300"}`} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <ProductCarousel
+            storeId={storeId ?? ""}
+            title={title}
+            subtitle={subtitle}
+            slidesVisible={Number(slidesVisible)}
+            cardStyle={cardStyle}
+            showPrice={showPrice}
+            showAddToCart={showAddToCart}
+            showArrows={showArrows}
+            showDots={showDots}
+            autoplay={autoplay}
+            autoplaySpeed={Number(autoplaySpeed)}
+            limit={Number(limit) || 12}
+            sort={sort}
+            collectionId={collectionId || undefined}
+            categoryId={categoryId || undefined}
+            brandId={brandId || undefined}
+            tagId={tagId || undefined}
+          />
         );
       },
     },
@@ -1091,19 +1141,32 @@ export const config: Config<any> = {
       },
       render: ({ title, subtitle, ctaText, ctaLink, bgColor, textColor, image, layout }) => {
         const alignClass = layout === "left" ? "text-left" : layout === "right" ? "text-right" : "text-center";
-        const bgStyle = image 
-          ? { backgroundImage: `url(${image})`, backgroundSize: "cover", backgroundPosition: "center" }
-          : { backgroundColor: bgColor };
-        
+
         return (
-          <div className={`py-16 px-6 relative overflow-hidden ${alignClass}`} style={bgStyle}>
-            {image && <div className="absolute inset-0 bg-black/40" />}
+          <div
+            className={`py-16 px-6 relative overflow-hidden ${alignClass}`}
+            style={image ? {} : { backgroundColor: bgColor }}
+          >
+            {/* H-4 fix: use <img> instead of CSS background-image so the browser
+                can discover and preload this as the LCP element */}
+            {image && (
+              <>
+                <img
+                  src={image}
+                  alt=""
+                  aria-hidden="true"
+                  fetchPriority="high"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40" />
+              </>
+            )}
             <div className="relative z-10 max-w-4xl mx-auto">
               {title && <h2 className="text-4xl font-heading font-bold mb-3" style={{ color: textColor }}>{title}</h2>}
               {subtitle && <p className="text-lg mb-6 opacity-90" style={{ color: textColor }}>{subtitle}</p>}
-              {ctaText && (
+              {ctaText && ctaLink && (
                 <a
-                  href={ctaLink || "#"}
+                  href={ctaLink}
                   className="inline-flex items-center gap-2 bg-white text-zinc-900 px-8 py-4 rounded-xl font-semibold hover:bg-zinc-100 transition-colors"
                 >
                   {ctaText}
@@ -1309,31 +1372,18 @@ export const config: Config<any> = {
         showMinutes: true,
         showSeconds: true,
       },
-      render: ({ title, bgColor, textColor, showDays, showHours, showMinutes, showSeconds }) => {
-        // Mock countdown for preview
-        const timeUnits = [
-          { value: "15", label: "Days", show: showDays },
-          { value: "08", label: "Hours", show: showHours },
-          { value: "42", label: "Minutes", show: showMinutes },
-          { value: "33", label: "Seconds", show: showSeconds },
-        ].filter(unit => unit.show);
-
+      render: ({ title, targetDate, bgColor, textColor, showDays, showHours, showMinutes, showSeconds }) => {
         return (
-          <div className="py-16 px-6" style={{ backgroundColor: bgColor }}>
-            <div className="max-w-4xl mx-auto text-center">
-              {title && <h2 className="text-3xl font-heading font-bold mb-8" style={{ color: textColor }}>{title}</h2>}
-              <div className="flex justify-center gap-4 md:gap-8">
-                {timeUnits.map((unit, i) => (
-                  <div key={i} className="text-center">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 min-w-20 md:min-w-25">
-                      <div className="text-3xl md:text-5xl font-bold font-mono" style={{ color: textColor }}>{unit.value}</div>
-                    </div>
-                    <p className="text-sm md:text-base mt-2 opacity-80" style={{ color: textColor }}>{unit.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <CountdownTimer
+            title={title}
+            targetDate={targetDate}
+            bgColor={bgColor}
+            textColor={textColor}
+            showDays={showDays}
+            showHours={showHours}
+            showMinutes={showMinutes}
+            showSeconds={showSeconds}
+          />
         );
       },
     },

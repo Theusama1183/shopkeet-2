@@ -60,3 +60,13 @@ export {
 } from "./cleanup-functions";
 
 export { archiveAuditLogs } from "./maintenance-functions";
+
+export {
+  onTransferCompleted,
+  onTransferCancelled,
+  onSaleRecorded,
+  onWarehouseCreated,
+  onSupplierCreated
+} from "./inventory-functions";
+
+export { onBulkProductImport } from "./bulk-import";

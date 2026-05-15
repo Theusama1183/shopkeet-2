@@ -84,7 +84,7 @@ export default async function StorePage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen">
-      <PuckRenderer data={page.content} layoutId={page.layoutId ?? undefined} />
+      <PuckRenderer data={page.content} layoutId={page.layoutId ?? undefined} storeId={store.id} />
     </div>
   );
 }

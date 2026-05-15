@@ -96,7 +96,7 @@ export const EMPTY_FORM: ProductFormData = {
   shortDescription: "",
   productType: "",
   vendor: "",
-  status: "draft",
+  status: "active",
   publishedAt: "",
   tags: [],
   images: [],

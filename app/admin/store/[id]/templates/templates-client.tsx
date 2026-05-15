@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DataTable, Column, FilterField } from "@/components/ui/data-table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Plus, Edit, Trash2, Check, Layout,
   PanelTop, PanelBottom, Package, FileText,
@@ -42,6 +43,13 @@ interface Template {
   updatedAt: string;
 }
 
+interface ConfirmState {
+  open: boolean;
+  title: string;
+  description: string;
+  onConfirm: () => void;
+}
+
 interface TemplatesClientProps {
   storeId: string;
 }
@@ -60,6 +68,16 @@ export function TemplatesClient({ storeId }: TemplatesClientProps) {
   const [createType, setCreateType] = useState("header");
   const [createName, setCreateName] = useState("");
   const [createError, setCreateError] = useState("");
+  const [confirmState, setConfirmState] = useState<ConfirmState>({
+    open: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
+  const closeConfirm = useCallback(() => {
+    setConfirmState(prev => ({ ...prev, open: false }));
+  }, []);
 
   const handleCreate = async () => {
     if (!createName.trim()) { setCreateError("Template name is required"); return; }
@@ -70,15 +88,15 @@ export function TemplatesClient({ storeId }: TemplatesClientProps) {
       setShowCreate(false);
       setCreateName("");
       notification.success("Template created", "The template has been created successfully");
-      router.push(`/store/${storeId}/design/template/${created.id}`);
-    } catch (error: any) {
-      setCreateError(error.message || "Failed to create template");
+      router.push(`/admin/store/${storeId}/design/template/${created.id}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create template";
+      setCreateError(message);
     }
   };
 
   const handleActivate = async (template: Template) => {
     try {
-      // Toggle the current state
       await activateTemplate.mutateAsync({ 
         templateId: template.id, 
         isActive: !template.isActive 
@@ -92,16 +110,56 @@ export function TemplatesClient({ storeId }: TemplatesClientProps) {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this template? This cannot be undone.")) return;
-    
-    try {
-      await deleteTemplate.mutateAsync(id);
-      notification.success("Template deleted", "The template has been deleted successfully");
-    } catch (error) {
-      notification.error("Failed to delete", error instanceof Error ? error.message : "An error occurred");
-    }
-  };
+  const handleDelete = useCallback((id: string, name: string) => {
+    setConfirmState({
+      open: true,
+      title: "Delete template",
+      description: `"${name}" will be permanently deleted. If it is active, your storefront will lose this template.`,
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          await deleteTemplate.mutateAsync(id);
+          notification.success("Template deleted", "The template has been deleted");
+        } catch (error) {
+          notification.error("Failed to delete", error instanceof Error ? error.message : "An error occurred");
+        }
+      },
+    });
+  }, [closeConfirm, deleteTemplate, notification]);
+
+  const handleBulkDelete = useCallback((items: Template[]) => {
+    setConfirmState({
+      open: true,
+      title: `Delete ${items.length} template${items.length > 1 ? "s" : ""}`,
+      description: `${items.length} template${items.length > 1 ? "s" : ""} will be permanently deleted. Active templates will be removed from your storefront.`,
+      onConfirm: async () => {
+        closeConfirm();
+        // Sequential delete with per-item error tracking
+        const failed: string[] = [];
+        for (const template of items) {
+          try {
+            await deleteTemplate.mutateAsync(template.id);
+          } catch {
+            failed.push(template.name);
+          }
+        }
+        const succeeded = items.length - failed.length;
+        if (failed.length === 0) {
+          notification.success(
+            "Templates deleted",
+            `${succeeded} template${succeeded > 1 ? "s" : ""} deleted successfully`
+          );
+        } else if (succeeded > 0) {
+          notification.error(
+            "Partial failure",
+            `${succeeded} deleted, failed: ${failed.join(", ")}`
+          );
+        } else {
+          notification.error("Delete failed", `Failed to delete: ${failed.join(", ")}`);
+        }
+      },
+    });
+  }, [closeConfirm, deleteTemplate, notification]);
 
   // ── Columns ──
   const columns: Column<Template>[] = [
@@ -188,6 +246,17 @@ export function TemplatesClient({ storeId }: TemplatesClientProps) {
   return (
     <div className="space-y-5">
 
+      {/* Confirm dialog */}
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        description={confirmState.description}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -215,18 +284,10 @@ export function TemplatesClient({ storeId }: TemplatesClientProps) {
         searchPlaceholder="Search templates..."
         getRowId={(t) => String(t.id)}
         builtinBulkActions={{
-          onBulkDelete: async (items) => {
-            if (!confirm(`Delete ${items.length} templates?`)) return;
-            try {
-              await Promise.all(items.map((t) => deleteTemplate.mutateAsync(t.id)));
-              notification.success("Templates deleted", `${items.length} templates have been deleted successfully`);
-            } catch (error) {
-              notification.error("Failed to delete", error instanceof Error ? error.message : "Failed to delete some templates");
-            }
-          },
+          onBulkDelete: (items) => handleBulkDelete(items),
         }}
         onRowClick={(item) => {
-          router.push(`/store/${storeId}/design/template/${item.id}`);
+          router.push(`/admin/store/${storeId}/design/template/${item.id}`);
         }}
         actions={(item) => {
           const t = item as Template;
@@ -247,7 +308,7 @@ export function TemplatesClient({ storeId }: TemplatesClientProps) {
 
               {/* Design editor */}
               {storeId && (
-                <Link href={`/store/${storeId}/design/template/${t.id}`} onClick={(e) => e.stopPropagation()}>
+                <Link href={`/admin/store/${storeId}/design/template/${t.id}`} onClick={(e) => e.stopPropagation()}>
                   <button className="p-1.5 rounded-lg text-zinc-400 hover:text-violet-600 hover:bg-violet-50 transition-colors" title="Open design editor">
                     <Edit className="w-4 h-4" />
                   </button>
@@ -256,7 +317,7 @@ export function TemplatesClient({ storeId }: TemplatesClientProps) {
 
               {/* Delete */}
               <button
-                onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
+                onClick={(e) => { e.stopPropagation(); handleDelete(t.id, t.name); }}
                 className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                 title="Delete template"
               >

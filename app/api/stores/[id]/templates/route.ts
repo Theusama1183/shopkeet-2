@@ -26,6 +26,7 @@ export async function GET(
     .from('templates')
     .select('*')
     .eq('store_id', id)
+    .is('deleted_at', null) // Filter out soft-deleted templates
     .order('type', { ascending: true })
     .order('created_at', { ascending: true });
 

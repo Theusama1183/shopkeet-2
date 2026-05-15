@@ -150,7 +150,7 @@ export default function TemplateDesignPage({
       setProducts(Array.isArray(prodData) ? prodData : (prodData.items ?? []));
       setIsLoading(false);
     }).catch(() => {
-      router.push(`/store/${storeId}/templates`);
+      router.push(`/admin/store/${storeId}/templates`);
     });
   }, [storeId, templateId, router]);
 
@@ -293,7 +293,7 @@ export default function TemplateDesignPage({
       {/* Topbar */}
       <header className="h-12 bg-white border-b border-zinc-200 flex items-center justify-between px-4 shrink-0 z-50">
         <div className="flex items-center gap-3">
-          <Link href={`/store/${storeId}/templates`}>
+          <Link href={`/admin/store/${storeId}/templates`}>
             <button className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
               <ArrowLeft className="w-4 h-4" />
               Templates
@@ -355,6 +355,7 @@ export default function TemplateDesignPage({
           onPublish={handleSave}
           onSave={async (data) => { latestContent.current = data; }}
           layoutId="default"
+          storeId={storeId}
         />
       </div>
 

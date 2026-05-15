@@ -17,7 +17,7 @@ export async function createStoreCore(params: {
   const { userId, userEmail, userName, userImage, name, subdomain, description, correlationId } = params;
 
   // Validate input
-  const validation = validateStoreInput({ name, subdomain, description });
+  const validation = validateStoreInput({ name, subdomain, description: description ?? undefined });
   if (!validation.success) {
     throw new ValidationError(validation.error || "Validation failed");
   }

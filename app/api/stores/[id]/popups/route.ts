@@ -26,6 +26,7 @@ export async function GET(
     .from('popups')
     .select('*')
     .eq('store_id', id)
+    .is('deleted_at', null) // Filter out soft-deleted popups
     .order('created_at', { ascending: true });
 
   if (error) {

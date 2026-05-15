@@ -37,6 +37,7 @@ export default async function StorefrontPage({
           <PuckRenderer
             data={homePage.content as Parameters<typeof PuckRenderer>[0]["data"]}
             layoutId={homePage.layoutId || "default"}
+            storeId={store.id}
           />
         </div>
       );

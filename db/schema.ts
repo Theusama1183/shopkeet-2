@@ -398,6 +398,150 @@ export const auditLogs = pgTable(
   ]
 );
 
+// ─── Warehouses ───────────────────────────────────────────────────────────────
+
+export const warehouses = pgTable(
+  "warehouses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    address: text("address"),
+    city: text("city"),
+    country: text("country"),
+    isDefault: boolean("is_default").default(false).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    storeId: uuid("store_id")
+      .references(() => stores.id, { onDelete: "cascade" })
+      .notNull(),
+    deletedAt: timestamp("deleted_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (table) => [
+    index("warehouses_store_id_idx").on(table.storeId),
+    index("warehouses_store_id_active_idx").on(table.storeId, table.isActive),
+    index("warehouses_deleted_at_idx").on(table.deletedAt),
+  ]
+);
+
+// ─── Suppliers ────────────────────────────────────────────────────────────────
+
+export const suppliers = pgTable(
+  "suppliers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    email: text("email"),
+    phone: text("phone"),
+    company: text("company"),
+    address: text("address"),
+    notes: text("notes"),
+    isActive: boolean("is_active").default(true).notNull(),
+    storeId: uuid("store_id")
+      .references(() => stores.id, { onDelete: "cascade" })
+      .notNull(),
+    deletedAt: timestamp("deleted_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (table) => [
+    index("suppliers_store_id_idx").on(table.storeId),
+    index("suppliers_store_id_active_idx").on(table.storeId, table.isActive),
+    index("suppliers_deleted_at_idx").on(table.deletedAt),
+  ]
+);
+
+// ─── Inventory Transfers ──────────────────────────────────────────────────────
+
+export const inventoryTransfers = pgTable(
+  "inventory_transfers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    referenceNumber: text("reference_number").notNull(),
+    fromWarehouseId: uuid("from_warehouse_id")
+      .references(() => warehouses.id, { onDelete: "cascade" })
+      .notNull(),
+    toWarehouseId: uuid("to_warehouse_id")
+      .references(() => warehouses.id, { onDelete: "cascade" })
+      .notNull(),
+    status: text("status").default("pending").notNull(), // pending | in_transit | completed | cancelled
+    notes: text("notes"),
+    storeId: uuid("store_id")
+      .references(() => stores.id, { onDelete: "cascade" })
+      .notNull(),
+    createdBy: uuid("created_by")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (table) => [
+    index("inventory_transfers_store_id_idx").on(table.storeId),
+    index("inventory_transfers_status_idx").on(table.status),
+    index("inventory_transfers_from_warehouse_idx").on(table.fromWarehouseId),
+    index("inventory_transfers_to_warehouse_idx").on(table.toWarehouseId),
+    index("inventory_transfers_created_at_idx").on(table.createdAt),
+  ]
+);
+
+// ─── Transfer Items ───────────────────────────────────────────────────────────
+
+export const transferItems = pgTable(
+  "transfer_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    transferId: uuid("transfer_id")
+      .references(() => inventoryTransfers.id, { onDelete: "cascade" })
+      .notNull(),
+    productId: uuid("product_id")
+      .references(() => products.id, { onDelete: "cascade" })
+      .notNull(),
+    quantity: integer("quantity").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("transfer_items_transfer_id_idx").on(table.transferId),
+    index("transfer_items_product_id_idx").on(table.productId),
+  ]
+);
+
+// ─── Sales ────────────────────────────────────────────────────────────────────
+
+export const sales = pgTable(
+  "sales",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    referenceNumber: text("reference_number").notNull(),
+    productId: uuid("product_id")
+      .references(() => products.id, { onDelete: "cascade" })
+      .notNull(),
+    quantity: integer("quantity").notNull(),
+    unitPrice: integer("unit_price").notNull(), // cents
+    totalPrice: integer("total_price").notNull(), // cents
+    warehouseId: uuid("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
+    supplierId: uuid("supplier_id").references(() => suppliers.id, { onDelete: "set null" }),
+    notes: text("notes"),
+    saleDate: timestamp("sale_date").defaultNow().notNull(),
+    storeId: uuid("store_id")
+      .references(() => stores.id, { onDelete: "cascade" })
+      .notNull(),
+    createdBy: uuid("created_by")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (table) => [
+    index("sales_store_id_idx").on(table.storeId),
+    index("sales_product_id_idx").on(table.productId),
+    index("sales_warehouse_id_idx").on(table.warehouseId),
+    index("sales_supplier_id_idx").on(table.supplierId),
+    index("sales_sale_date_idx").on(table.saleDate),
+    index("sales_created_at_idx").on(table.createdAt),
+  ]
+);
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -414,6 +558,10 @@ export const storesRelations = relations(stores, ({ one, many }) => ({
   pages: many(pages),
   templates: many(templates),
   popups: many(popups),
+  warehouses: many(warehouses),
+  suppliers: many(suppliers),
+  inventoryTransfers: many(inventoryTransfers),
+  sales: many(sales),
 }));
 
 export const collectionsRelations = relations(collections, ({ one, many }) => ({
@@ -445,6 +593,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   brand: one(brands, { fields: [products.brandId], references: [brands.id] }),
   productTags: many(productTags),
   inventory: one(inventory, { fields: [products.id], references: [inventory.productId] }),
+  sales: many(sales),
 }));
 
 export const productTagsRelations = relations(productTags, ({ one }) => ({
@@ -467,4 +616,36 @@ export const templatesRelations = relations(templates, ({ one }) => ({
 
 export const popupsRelations = relations(popups, ({ one }) => ({
   store: one(stores, { fields: [popups.storeId], references: [stores.id] }),
+}));
+
+export const warehousesRelations = relations(warehouses, ({ one, many }) => ({
+  store: one(stores, { fields: [warehouses.storeId], references: [stores.id] }),
+  outgoingTransfers: many(inventoryTransfers),
+  sales: many(sales),
+}));
+
+export const suppliersRelations = relations(suppliers, ({ one, many }) => ({
+  store: one(stores, { fields: [suppliers.storeId], references: [stores.id] }),
+  sales: many(sales),
+}));
+
+export const inventoryTransfersRelations = relations(inventoryTransfers, ({ one, many }) => ({
+  store: one(stores, { fields: [inventoryTransfers.storeId], references: [stores.id] }),
+  fromWarehouse: one(warehouses, { fields: [inventoryTransfers.fromWarehouseId], references: [warehouses.id] }),
+  toWarehouse: one(warehouses, { fields: [inventoryTransfers.toWarehouseId], references: [warehouses.id] }),
+  createdByUser: one(users, { fields: [inventoryTransfers.createdBy], references: [users.id] }),
+  items: many(transferItems),
+}));
+
+export const transferItemsRelations = relations(transferItems, ({ one }) => ({
+  transfer: one(inventoryTransfers, { fields: [transferItems.transferId], references: [inventoryTransfers.id] }),
+  product: one(products, { fields: [transferItems.productId], references: [products.id] }),
+}));
+
+export const salesRelations = relations(sales, ({ one }) => ({
+  store: one(stores, { fields: [sales.storeId], references: [stores.id] }),
+  product: one(products, { fields: [sales.productId], references: [products.id] }),
+  warehouse: one(warehouses, { fields: [sales.warehouseId], references: [warehouses.id] }),
+  supplier: one(suppliers, { fields: [sales.supplierId], references: [suppliers.id] }),
+  createdByUser: one(users, { fields: [sales.createdBy], references: [users.id] }),
 }));

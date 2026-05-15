@@ -49,6 +49,7 @@ export async function GET(
           .from('products')
           .select('*', { count: 'exact' })
           .eq('store_id', id)
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .range(offset, offset + limit - 1);
 
@@ -152,6 +153,8 @@ export async function POST(
         description,
         price,
         image,
+        sku: (body as any).sku || null,
+        is_active: (body as any).is_active !== false,
         store_id: storeId,
       } as any)
       .select()

@@ -41,6 +41,8 @@ export const updateProductSchema = z.object({
     .max(99999999, "Price is too high")
     .optional(),
   image: z.string().url("Invalid image URL").optional().nullable(),
+  is_active: z.boolean().optional(),
+  sku: z.string().max(100).optional().nullable(),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;

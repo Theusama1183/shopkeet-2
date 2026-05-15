@@ -80,4 +80,51 @@ export type Events = {
       size: number;
     };
   };
+  "inventory/transfer.completed": {
+    data: {
+      transferId: string;
+      storeId: string;
+    };
+  };
+  "inventory/transfer.cancelled": {
+    data: {
+      transferId: string;
+      storeId: string;
+    };
+  };
+  "inventory/sale.recorded": {
+    data: {
+      saleId: string;
+      storeId: string;
+      productId: string;
+      quantity: number;
+    };
+  };
+  "inventory/warehouse.created": {
+    data: {
+      warehouseId: string;
+      storeId: string;
+    };
+  };
+  "inventory/supplier.created": {
+    data: {
+      supplierId: string;
+      storeId: string;
+    };
+  };
+  "product/bulk-import": {
+    data: {
+      storeId: string;
+      userId: string;
+      products: {
+        name: string;
+        description?: string;
+        price?: string | number;
+        sku?: string;
+        image?: string;
+        quantity?: string | number;
+        status?: string;
+      }[];
+    };
+  };
 };

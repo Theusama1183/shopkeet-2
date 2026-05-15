@@ -78,8 +78,42 @@ async function updateProductApi(
 
 // Delete product
 async function deleteProductApi(id: string): Promise<void> {
-  const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error('Failed to delete product');
+  const res = await fetch(`/api/products/${id}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to delete product');
+  }
+}
+
+// Bulk delete products
+async function bulkDeleteProductsApi(storeId: string, ids: string[]): Promise<{ deleted: number; errors: string[] }> {
+  const res = await fetch(`/api/stores/${storeId}/products/bulk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'delete', ids }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Bulk delete failed');
+  }
+  return res.json();
+}
+
+// Bulk update status
+async function bulkUpdateStatusApi(storeId: string, ids: string[], isActive: boolean): Promise<{ updated: number }> {
+  const res = await fetch(`/api/stores/${storeId}/products/bulk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'update_status', ids, is_active: isActive }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Bulk update failed');
+  }
+  return res.json();
 }
 
 // Hooks
@@ -139,6 +173,29 @@ export function useDeleteProduct(storeId: string) {
   
   return useMutation({
     mutationFn: deleteProductApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.list(storeId) });
+    },
+  });
+}
+
+export function useBulkDeleteProducts(storeId: string) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (ids: string[]) => bulkDeleteProductsApi(storeId, ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.list(storeId) });
+    },
+  });
+}
+
+export function useBulkUpdateStatus(storeId: string) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ ids, isActive }: { ids: string[]; isActive: boolean }) =>
+      bulkUpdateStatusApi(storeId, ids, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.list(storeId) });
     },

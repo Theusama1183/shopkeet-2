@@ -48,8 +48,10 @@ const nextConfig: NextConfig = {
 
   // Allow HMR and _next/* assets from subdomains in dev
   allowedDevOrigins: [
-    "*.lvh.me:3000",
     "lvh.me:3000",
+    "admin.lvh.me:3000",
+    "auth.lvh.me:3000",
+    "*.lvh.me:3000",
   ],
 
   // Allow HMR from subdomains

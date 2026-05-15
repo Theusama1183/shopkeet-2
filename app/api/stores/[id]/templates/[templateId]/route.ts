@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
 import { invalidateTag } from "@/lib/cache-helpers";
+import type { Database } from "@/types/supabase";
+
+type TemplateUpdate = Database["public"]["Tables"]["templates"]["Update"];
 
 // GET /api/stores/[id]/templates/[templateId]
 export async function GET(
@@ -28,6 +31,7 @@ export async function GET(
     .select('*')
     .eq('id', templateId)
     .eq('store_id', id)
+    .is('deleted_at', null) // Exclude soft-deleted
     .single();
   
   if (templateError || !template) return NextResponse.json({ error: "Template not found" }, { status: 404 });
@@ -58,13 +62,13 @@ export async function PUT(
   const body = await req.json();
   const { name, content, isActive, conditions } = body;
 
-  const updateData: any = {
+  const updateData: TemplateUpdate = {
     updated_at: new Date().toISOString(),
   };
-  if (name !== undefined) updateData.name = name;
-  if (content !== undefined) updateData.content = content;
-  if (conditions !== undefined) updateData.conditions = conditions;
-  if (isActive !== undefined) updateData.is_active = isActive;
+  if (name !== undefined) updateData.name = name as string;
+  if (content !== undefined) updateData.content = content as Database["public"]["Tables"]["templates"]["Row"]["content"];
+  if (conditions !== undefined) updateData.conditions = conditions as Database["public"]["Tables"]["templates"]["Row"]["conditions"];
+  if (isActive !== undefined) updateData.is_active = isActive as boolean;
 
   // ── Atomic transaction: deactivate others + activate this one ────────────
   const serviceDb = getServiceRoleDatabase();
@@ -76,35 +80,37 @@ export async function PUT(
       .select('type')
       .eq('id', templateId)
       .eq('store_id', id)
+      .is('deleted_at', null)
       .single();
 
     if (current) {
       // Deactivate all other templates of same type (excluding this one)
-      await (serviceDb
+      await serviceDb
         .from('templates')
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('store_id', id)
-        .eq('type', (current as any).type)
-        .neq('id', templateId));
+        .eq('type', (current as { type: string }).type)
+        .neq('id', templateId)
+        .is('deleted_at', null);
     }
   }
 
-  const { data: updatedData, error: updateError } = await (serviceDb
+  const { data: updatedData, error: updateError } = await serviceDb
     .from('templates')
     .update(updateData)
     .eq('id', templateId)
     .eq('store_id', id)
+    .is('deleted_at', null)
     .select()
-    .single());
+    .single();
 
   if (updateError || !updatedData) return NextResponse.json({ error: "Template not found" }, { status: 404 });
-  
-  const updated = updatedData as any;
+
   invalidateTag("templates");
-  return NextResponse.json(updated);
+  return NextResponse.json(updatedData);
 }
 
-// DELETE /api/stores/[id]/templates/[templateId]
+// DELETE /api/stores/[id]/templates/[templateId] — soft delete
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; templateId: string }> }
@@ -124,16 +130,23 @@ export async function DELETE(
   
   if (storeError || !store) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  // Soft delete — set deleted_at timestamp
   const serviceDb = getServiceRoleDatabase();
-  const { error: deleteError } = await serviceDb
+  const { data: deletedData, error: deleteError } = await serviceDb
     .from('templates')
-    .delete()
+    .update({
+      deleted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', templateId)
-    .eq('store_id', id);
+    .eq('store_id', id)
+    .is('deleted_at', null) // Prevent double-delete
+    .select('id')
+    .single();
 
-  if (deleteError) {
+  if (deleteError || !deletedData) {
     console.error('[templates] Failed to delete template:', deleteError);
-    return NextResponse.json({ error: "Failed to delete template" }, { status: 500 });
+    return NextResponse.json({ error: "Template not found or already deleted" }, { status: 404 });
   }
 
   invalidateTag("templates");

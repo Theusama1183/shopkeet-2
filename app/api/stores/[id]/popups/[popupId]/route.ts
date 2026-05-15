@@ -32,6 +32,7 @@ export async function GET(
       .select('*')
       .eq('id', popupId)
       .eq('store_id', id)
+      .is('deleted_at', null) // Exclude soft-deleted
       .single();
 
     if (popupError || !popup) return NextResponse.json({ error: "Popup not found" }, { status: 404 });
@@ -129,18 +130,23 @@ export async function DELETE(
 
     if (storeError || !store) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    // Popups table has no deleted_at column — use hard delete
-    // (popups are ephemeral UI elements, not business records)
+    // Soft delete — set deleted_at timestamp
     const serviceDb = getServiceRoleDatabase();
-    const { error: deleteError } = await serviceDb
+    const { data: deletedData, error: deleteError } = await serviceDb
       .from('popups')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', popupId)
-      .eq('store_id', id);
+      .eq('store_id', id)
+      .is('deleted_at', null) // Prevent double-delete
+      .select('id')
+      .single();
 
-    if (deleteError) {
+    if (deleteError || !deletedData) {
       console.error('[popups] Failed to delete popup:', deleteError);
-      return NextResponse.json({ error: "Failed to delete popup" }, { status: 500 });
+      return NextResponse.json({ error: "Popup not found or already deleted" }, { status: 404 });
     }
 
     // Fire Inngest event (fire-and-forget)

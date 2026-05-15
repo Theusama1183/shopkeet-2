@@ -33,6 +33,7 @@ interface PageData {
   metaDescription?: string | null;
   isPublished: boolean;
   storeId: string;
+  store?: { subdomain: string };
 }
 
 function DesignPageContent({
@@ -47,6 +48,8 @@ function DesignPageContent({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // M-1: Track unsaved changes to warn before leaving
+  const [isDirty, setIsDirty] = useState(false);
 
   // Latest content ref — updated by Puck's onChange without causing re-renders
   const latestData = useRef<Data | null>(null);
@@ -54,16 +57,21 @@ function DesignPageContent({
   useEffect(() => {
     const loadPage = async () => {
       try {
-        const response = await fetch(`/api/stores/${storeId}/pages/${pageId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setPage(data);
+        // Fetch page data and store subdomain in one go
+        const [pageRes, storeRes] = await Promise.all([
+          fetch(`/api/stores/${storeId}/pages/${pageId}`),
+          fetch(`/api/stores/${storeId}`),
+        ]);
+        if (pageRes.ok) {
+          const data = await pageRes.json();
+          const storeData = storeRes.ok ? await storeRes.json() : null;
+          setPage({ ...data, store: storeData });
           latestData.current = data.content;
         } else {
-          router.push(`/store/${storeId}/pages`);
+          router.push(`/admin/store/${storeId}/pages`);
         }
       } catch {
-        router.push(`/store/${storeId}/pages`);
+        router.push(`/admin/store/${storeId}/pages`);
       } finally {
         setIsLoading(false);
       }
@@ -71,10 +79,23 @@ function DesignPageContent({
     loadPage();
   }, [storeId, pageId, router]);
 
+  // M-1: Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
   // Called by Puck's onChange — store latest data in ref, NO state update
   // This is the key fix: state update here caused parent re-render → Puck remount
   const handleChange = useCallback(async (data: Data) => {
     latestData.current = data;
+    setIsDirty(true); // M-1: Mark as having unsaved changes
   }, []);
 
   // Called by Save button or Puck's onPublish
@@ -100,6 +121,7 @@ function DesignPageContent({
               : updated
           );
           setSaveError(null);
+          setIsDirty(false); // M-1: Reset dirty flag after successful save
         } else {
           const err = await response.json().catch(() => ({}));
           setSaveError(err.error || "Failed to save. Please try again.");
@@ -121,6 +143,11 @@ function DesignPageContent({
     }
   }, [handleSave]);
 
+  // M-2: Build correct storefront preview URL using store subdomain
+  const previewUrl = page?.store?.subdomain
+    ? `https://${page.store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${page.slug}`
+    : null;
+
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-white">
@@ -137,7 +164,7 @@ function DesignPageContent({
       <div className="h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <p className="text-zinc-900 font-semibold mb-2">Page not found</p>
-          <Link href={`/store/${storeId}/pages`}>
+          <Link href={`/admin/store/${storeId}/pages`}>
             <Button size="sm" variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Pages
@@ -154,7 +181,7 @@ function DesignPageContent({
       <header className="h-12 bg-white border-b border-zinc-200 flex items-center justify-between px-4 shrink-0 z-50">
         {/* Left */}
         <div className="flex items-center gap-3">
-          <Link href={`/store/${storeId}/pages`}>
+          <Link href={`/admin/store/${storeId}/pages`}>
             <button className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
               <ArrowLeft className="w-4 h-4" />
               Pages
@@ -164,19 +191,27 @@ function DesignPageContent({
           <span className="text-sm font-medium text-zinc-900 truncate max-w-50">
             {page.title}
           </span>
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-              page.isPublished
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-amber-50 text-amber-700 border border-amber-200"
-            }`}
-          >
-            {page.isPublished ? (
-              <><Globe className="w-3 h-3" /> Published</>
-            ) : (
-              <><Clock className="w-3 h-3" /> Draft</>
-            )}
-          </span>
+          {/* M-1: Show unsaved indicator */}
+          {isDirty && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+              Unsaved
+            </span>
+          )}
+          {!isDirty && (
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                page.isPublished
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-amber-50 text-amber-700 border border-amber-200"
+              }`}
+            >
+              {page.isPublished ? (
+                <><Globe className="w-3 h-3" /> Published</>
+              ) : (
+                <><Clock className="w-3 h-3" /> Draft</>
+              )}
+            </span>
+          )}
         </div>
 
         {/* Right */}
@@ -186,13 +221,14 @@ function DesignPageContent({
               {saveError}
             </span>
           )}
-          {page.isPublished && (
-            <Link href={`/${page.slug}`} target="_blank">
+          {/* M-2: Preview opens the actual storefront URL */}
+          {page.isPublished && previewUrl && (
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer">
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
                 <Eye className="w-3.5 h-3.5" />
                 Preview
               </button>
-            </Link>
+            </a>
           )}
           <button
             onClick={handleManualSave}
@@ -219,6 +255,7 @@ function DesignPageContent({
           onPublish={(data) => handleSave(data, true)}
           onSave={handleChange}
           layoutId={page.layoutId}
+          storeId={storeId}
         />
       </div>
     </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DataTable, Column } from "@/components/ui/data-table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Plus, Edit, Trash2, Layers, Check, Timer, TrendingUp, LogOut, MousePointer } from "lucide-react";
 import type { PopupTriggerEvent } from "@/lib/popups/types";
 import { TRIGGER_EVENT_LABELS } from "@/lib/popups/types";
@@ -19,6 +20,13 @@ interface PopupRow {
   trigger: { event?: PopupTriggerEvent; frequency?: string };
   createdAt: string;
   updatedAt: string;
+}
+
+interface ConfirmState {
+  open: boolean;
+  title: string;
+  description: string;
+  onConfirm: () => void;
 }
 
 // ─── Trigger icon map ─────────────────────────────────────────────────────────
@@ -44,6 +52,16 @@ export default function PopupsPage({ params }: { params: Promise<{ id: string }>
   const [showCreate, setCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [createErr, setCreateErr] = useState("");
+  const [confirmState, setConfirmState] = useState<ConfirmState>({
+    open: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
+  const closeConfirm = useCallback(() => {
+    setConfirmState(prev => ({ ...prev, open: false }));
+  }, []);
 
   const handleCreate = async () => {
     if (!newName.trim()) { setCreateErr("Name is required"); return; }
@@ -54,9 +72,10 @@ export default function PopupsPage({ params }: { params: Promise<{ id: string }>
       setCreate(false);
       setNewName("");
       notification.success("Popup created", "The popup has been created successfully");
-      router.push(`/store/${storeId}/design/popup/${created.id}`);
-    } catch (error: any) {
-      setCreateErr(error.message || "Failed to create popup");
+      router.push(`/admin/store/${storeId}/design/popup/${created.id}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create popup";
+      setCreateErr(message);
     }
   };
 
@@ -72,16 +91,56 @@ export default function PopupsPage({ params }: { params: Promise<{ id: string }>
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this popup? This cannot be undone.")) return;
-    
-    try {
-      await deletePopup.mutateAsync(id);
-      notification.success("Popup deleted", "The popup has been deleted successfully");
-    } catch (error) {
-      notification.error("Failed to delete", error instanceof Error ? error.message : "An error occurred");
-    }
-  };
+  const handleDelete = useCallback((id: string, name: string) => {
+    setConfirmState({
+      open: true,
+      title: "Delete popup",
+      description: `"${name}" will be permanently deleted and removed from your storefront.`,
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          await deletePopup.mutateAsync(id);
+          notification.success("Popup deleted", "The popup has been deleted");
+        } catch (error) {
+          notification.error("Failed to delete", error instanceof Error ? error.message : "An error occurred");
+        }
+      },
+    });
+  }, [closeConfirm, deletePopup, notification]);
+
+  const handleBulkDelete = useCallback((items: PopupRow[]) => {
+    setConfirmState({
+      open: true,
+      title: `Delete ${items.length} popup${items.length > 1 ? "s" : ""}`,
+      description: `${items.length} popup${items.length > 1 ? "s" : ""} will be permanently deleted. This cannot be undone.`,
+      onConfirm: async () => {
+        closeConfirm();
+        // Sequential delete with per-item error tracking
+        const failed: string[] = [];
+        for (const popup of items) {
+          try {
+            await deletePopup.mutateAsync(popup.id);
+          } catch {
+            failed.push(popup.name);
+          }
+        }
+        const succeeded = items.length - failed.length;
+        if (failed.length === 0) {
+          notification.success(
+            "Popups deleted",
+            `${succeeded} popup${succeeded > 1 ? "s" : ""} deleted successfully`
+          );
+        } else if (succeeded > 0) {
+          notification.error(
+            "Partial failure",
+            `${succeeded} deleted, failed: ${failed.join(", ")}`
+          );
+        } else {
+          notification.error("Delete failed", `Failed to delete: ${failed.join(", ")}`);
+        }
+      },
+    });
+  }, [closeConfirm, deletePopup, notification]);
 
   // ── Columns ──────────────────────────────────────────────────────────────────
 
@@ -142,6 +201,17 @@ export default function PopupsPage({ params }: { params: Promise<{ id: string }>
   return (
     <div className="space-y-5">
 
+      {/* Confirm dialog */}
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        description={confirmState.description}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -168,18 +238,10 @@ export default function PopupsPage({ params }: { params: Promise<{ id: string }>
         searchPlaceholder="Search popups..."
         getRowId={(p) => String(p.id)}
         builtinBulkActions={{
-          onBulkDelete: async (items) => {
-            if (!confirm(`Delete ${items.length} popup${items.length > 1 ? "s" : ""}?`)) return;
-            try {
-              await Promise.all(items.map(p => deletePopup.mutateAsync(p.id)));
-              notification.success("Popups deleted", `${items.length} popup${items.length > 1 ? "s" : ""} have been deleted successfully`);
-            } catch (error) {
-              notification.error("Failed to delete", error instanceof Error ? error.message : "Failed to delete some popups");
-            }
-          },
+          onBulkDelete: (items) => handleBulkDelete(items),
         }}
         onRowClick={(item) => {
-          router.push(`/store/${storeId}/design/popup/${item.id}`);
+          router.push(`/admin/store/${storeId}/design/popup/${item.id}`);
         }}
         actions={(item) => {
           const p = item as PopupRow;
@@ -197,14 +259,14 @@ export default function PopupsPage({ params }: { params: Promise<{ id: string }>
                 <Check className="w-4 h-4" />
               </button>
               {storeId && (
-                <Link href={`/store/${storeId}/design/popup/${p.id}`} onClick={e => e.stopPropagation()}>
+                <Link href={`/admin/store/${storeId}/design/popup/${p.id}`} onClick={e => e.stopPropagation()}>
                   <button className="p-1.5 rounded-lg text-zinc-400 hover:text-violet-600 hover:bg-violet-50 transition-colors" title="Open design editor">
                     <Edit className="w-4 h-4" />
                   </button>
                 </Link>
               )}
               <button
-                onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
+                onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}
                 className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                 title="Delete popup"
               >

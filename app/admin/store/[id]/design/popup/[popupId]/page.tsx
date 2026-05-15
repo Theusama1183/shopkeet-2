@@ -115,7 +115,7 @@ export default function PopupDesignPage({
       setPages(Array.isArray(pageData) ? pageData : (pageData.items ?? []));
       setProducts(Array.isArray(prodData) ? prodData : (prodData.items ?? []));
       setIsLoading(false);
-    }).catch(() => router.push(`/store/${storeId}/popups`));
+    }).catch(() => router.push(`/admin/store/${storeId}/popups`));
   }, [storeId, popupId, router]);
 
   // Close sub-selector dropdown on outside click
@@ -241,7 +241,7 @@ export default function PopupDesignPage({
       {/* ── Topbar ── */}
       <header className="h-12 bg-white border-b border-zinc-200 flex items-center justify-between px-4 shrink-0 z-50">
         <div className="flex items-center gap-3">
-          <Link href={`/store/${storeId}/popups`}>
+          <Link href={`/admin/store/${storeId}/popups`}>
             <button className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
               <ArrowLeft className="w-4 h-4" />
               Popups
@@ -305,6 +305,7 @@ export default function PopupDesignPage({
           onPublish={handleSave}
           onSave={async (data) => { latestContent.current = data; }}
           layoutId="default"
+          storeId={storeId}
         />
       </div>
 

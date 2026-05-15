@@ -5,30 +5,25 @@ import { useEffect } from 'react';
 export function WebVitals() {
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') {
-      import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-        getCLS((metric) => {
+      import('web-vitals').then(({ onCLS, onINP, onFCP, onLCP, onTTFB }) => {
+        onCLS((metric: any) => {
           console.log('CLS:', metric);
-          // Send to analytics service
         });
         
-        getFID((metric) => {
-          console.log('FID:', metric);
-          // Send to analytics service
+        onINP((metric: any) => {
+          console.log('INP:', metric);
         });
         
-        getFCP((metric) => {
+        onFCP((metric: any) => {
           console.log('FCP:', metric);
-          // Send to analytics service
         });
         
-        getLCP((metric) => {
+        onLCP((metric: any) => {
           console.log('LCP:', metric);
-          // Send to analytics service
         });
         
-        getTTFB((metric) => {
+        onTTFB((metric: any) => {
           console.log('TTFB:', metric);
-          // Send to analytics service
         });
       });
     }

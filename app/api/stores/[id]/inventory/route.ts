@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
-import { withCache, cacheDelete } from "@/lib/redis";
+import { withCache, cacheDelete, cacheDeletePattern } from "@/lib/redis";
 import { logAuditEvent } from "@/lib/audit/logger";
 import { z } from "zod";
 
@@ -148,7 +148,7 @@ export async function POST(
       metadata: { storeId, productId, quantity },
     });
 
-    await cacheDelete(`inventory:store:${storeId}:*`).catch(() => {});
+    await cacheDeletePattern(`inventory:store:${storeId}:*`).catch(() => {});
 
     return NextResponse.json(inventory, { status: 200 });
   } catch (error) {

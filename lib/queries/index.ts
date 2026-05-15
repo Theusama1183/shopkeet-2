@@ -8,4 +8,5 @@ export * from './tags';
 export * from './categories';
 export * from './brands';
 export * from './collections';
+export * from './inventory';
 export { useQueryLoading } from './use-query-loading';

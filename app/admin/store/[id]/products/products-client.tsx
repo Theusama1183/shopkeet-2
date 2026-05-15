@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -8,8 +9,9 @@ import {
   Plus, Edit, Trash2, Package, ImageIcon,
   Download, Upload, MoreHorizontal,
 } from "lucide-react";
-import { useProducts, useDeleteProduct, type Product } from "@/lib/queries";
+import { useProducts, useDeleteProduct, useBulkDeleteProducts, useBulkUpdateStatus, type Product } from "@/lib/queries";
 import { useNotification } from "@/lib/stores";
+import { CSVImportModal } from "@/components/products/csv-import-modal";
 
 // Dynamic import DataTable (PERF-011)
 const DataTable = dynamic(() => import("@/components/ui/data-table").then(m => ({ default: m.DataTable })), {
@@ -18,9 +20,12 @@ const DataTable = dynamic(() => import("@/components/ui/data-table").then(m => (
 
 export function ProductsTable({ storeId }: { storeId: string }) {
   const router = useRouter();
-  const { data: products = [], isLoading } = useProducts(storeId);
+  const { data: products = [], isLoading, refetch } = useProducts(storeId);
   const deleteProduct = useDeleteProduct(storeId);
+  const bulkDelete = useBulkDeleteProducts(storeId);
+  const bulkUpdateStatus = useBulkUpdateStatus(storeId);
   const notification = useNotification();
+  const [importOpen, setImportOpen] = useState(false);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this product? This cannot be undone.")) return;
@@ -136,7 +141,10 @@ export function ProductsTable({ storeId }: { storeId: string }) {
           <p className="text-sm text-zinc-500 mt-0.5">{products.length} total</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-zinc-600 border border-zinc-200 rounded-lg bg-white hover:bg-zinc-50 transition-colors">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-zinc-600 border border-zinc-200 rounded-lg bg-white hover:bg-zinc-50 transition-colors"
+          >
             <Upload className="w-4 h-4" />
             Import
           </button>
@@ -165,13 +173,58 @@ export function ProductsTable({ storeId }: { storeId: string }) {
         onRowClick={(item) => router.push(`/store/${storeId}/products/${(item as Product).id}/edit`)}
         builtinBulkActions={{
           onBulkDelete: async (items) => {
-            if (!confirm(`Delete ${items.length} products?`)) return;
+            if (!confirm(`Delete ${items.length} products? This cannot be undone.`)) return;
             try {
-              await Promise.all(items.map((p) => deleteProduct.mutateAsync((p as Product).id)));
-              notification.success("Products deleted", `${items.length} products have been deleted successfully`);
+              const ids = items.map((p) => (p as Product).id);
+              await bulkDelete.mutateAsync(ids);
+              notification.success("Products deleted", `${items.length} products deleted successfully`);
             } catch (error) {
-              notification.error("Failed to delete", error instanceof Error ? error.message : "Failed to delete some products");
+              notification.error("Failed to delete", error instanceof Error ? error.message : "Failed to delete products");
             }
+          },
+          onBulkActivate: async (items) => {
+            try {
+              const ids = items.map((p) => (p as Product).id);
+              await bulkUpdateStatus.mutateAsync({ ids, isActive: true });
+              notification.success("Products activated", `${items.length} products set to active`);
+            } catch (error) {
+              notification.error("Failed to activate", error instanceof Error ? error.message : "Failed to update products");
+            }
+          },
+          onBulkDeactivate: async (items) => {
+            try {
+              const ids = items.map((p) => (p as Product).id);
+              await bulkUpdateStatus.mutateAsync({ ids, isActive: false });
+              notification.success("Products deactivated", `${items.length} products set to draft`);
+            } catch (error) {
+              notification.error("Failed to deactivate", error instanceof Error ? error.message : "Failed to update products");
+            }
+          },
+          onBulkExport: async (items) => {
+            notification.info("Preparing export", `Generating CSV for ${items.length} products...`);
+            
+            // Short timeout to allow UI to show notification before heavy processing
+            setTimeout(() => {
+              const rows = items.map((p) => {
+                const prod = p as Product;
+                return [
+                  `"${prod.name.replace(/"/g, '""')}"`, 
+                  `"${(prod.sku || "").replace(/"/g, '""')}"`, 
+                  ((prod.price || 0) / 100).toFixed(2), 
+                  prod.is_active ? "Active" : "Draft"
+                ].join(",");
+              });
+              
+              const csv = ["Name,SKU,Price,Status", ...rows].join("\n");
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `products-export-${new Date().toISOString().slice(0, 10)}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+              notification.success("Exported", `${items.length} products exported to CSV`);
+            }, 100);
           },
         }}
         actions={(item) => {
@@ -213,6 +266,20 @@ export function ProductsTable({ storeId }: { storeId: string }) {
             </Link>
           </div>
         }
+      />
+
+      {/* CSV Import Modal */}
+      <CSVImportModal
+        storeId={storeId}
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onComplete={(result) => {
+          refetch();
+          notification.success(
+            "Products imported",
+            `${result.imported} products imported successfully${result.skipped > 0 ? `, ${result.skipped} skipped` : ""}`
+          );
+        }}
       />
     </div>
   );

@@ -53,6 +53,16 @@ import {
   
   // Maintenance functions
   archiveAuditLogs,
+
+  // Inventory functions
+  onTransferCompleted,
+  onTransferCancelled,
+  onSaleRecorded,
+  onWarehouseCreated,
+  onSupplierCreated,
+
+  // Import functions
+  onBulkProductImport,
 } from "@/lib/inngest/functions";
 
 export const { GET, POST, PUT } = serve({
@@ -112,6 +122,16 @@ export const { GET, POST, PUT } = serve({
     
     // Maintenance functions (1)
     archiveAuditLogs,
+
+    // Inventory functions (5)
+    onTransferCompleted,
+    onTransferCancelled,
+    onSaleRecorded,
+    onWarehouseCreated,
+    onSupplierCreated,
+
+    // Import functions (1)
+    onBulkProductImport,
   ],
   signingKey: process.env.INNGEST_SIGNING_KEY,
 });

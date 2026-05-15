@@ -22,12 +22,6 @@ interface PageData {
   createdAt: string;
 }
 
-interface Store {
-  id: string;
-  name: string;
-  subdomain: string;
-}
-
 export default function EditPagePage({
   params,
 }: {
@@ -36,7 +30,6 @@ export default function EditPagePage({
   const { id: storeId, pageId } = use(params);
   const router = useRouter();
   const [page, setPage] = useState<PageData | null>(null);
-  const [store, setStore] = useState<Store | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -58,10 +51,7 @@ export default function EditPagePage({
     if (!storeId || !pageId) return;
     const load = async () => {
       try {
-        const [pRes, sRes] = await Promise.all([
-          fetch(`/api/stores/${storeId}/pages/${pageId}`),
-          fetch(`/api/stores/${storeId}`),
-        ]);
+        const pRes = await fetch(`/api/stores/${storeId}/pages/${pageId}`);
         if (pRes.ok) {
           const data: PageData = await pRes.json();
           setPage(data);
@@ -128,8 +118,7 @@ export default function EditPagePage({
     }
   };
 
-  const storeUrl = store ? `${store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "lvh.me:3000"}` : "";
-  const liveUrl = `http://${storeUrl}/${slug}`;
+  const liveUrl = `http://lvh.me:3000/${slug}`;
 
   if (isLoading) {
     return (
@@ -236,11 +225,9 @@ export default function EditPagePage({
                   className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
                 />
               </div>
-              {storeUrl && (
-                <p className="text-xs text-zinc-400 mt-1.5">
-                  {storeUrl}/{slug || "page-url-handle"}
-                </p>
-              )}
+              <p className="text-xs text-zinc-400 mt-1.5">
+                yourstore.lvh.me/{slug || "page-url-handle"}
+              </p>
             </div>
           </div>
 
@@ -269,7 +256,7 @@ export default function EditPagePage({
                     {metaTitle || title || "Page Title"}
                   </p>
                   <p className="text-green-700 text-xs truncate">
-                    {storeUrl}/{slug}
+                    yourstore.lvh.me/{slug}
                   </p>
                   <p className="text-zinc-500 text-xs mt-1 line-clamp-2">
                     {metaDescription || "Add a meta description to improve your search engine ranking."}

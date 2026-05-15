@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
-import { cacheDelete } from "@/lib/redis";
+import { cacheDelete, cacheDeletePattern } from "@/lib/redis";
 import { logAuditEvent } from "@/lib/audit/logger";
 import { z } from "zod";
 
@@ -124,7 +124,7 @@ export async function PATCH(
       metadata: { storeId, updates },
     });
 
-    await cacheDelete(`tags:store:${storeId}:*`).catch(() => {});
+    await cacheDeletePattern(`tags:store:${storeId}:*`).catch(() => {});
 
     return NextResponse.json(updatedTag);
   } catch (error) {
@@ -183,7 +183,7 @@ export async function DELETE(
       metadata: { storeId },
     });
 
-    await cacheDelete(`tags:store:${storeId}:*`).catch(() => {});
+    await cacheDeletePattern(`tags:store:${storeId}:*`).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

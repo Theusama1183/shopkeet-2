@@ -107,20 +107,22 @@ export async function cacheDeletePattern(pattern: string): Promise<number> {
   if (!isRedisAvailable()) return 0;
 
   try {
-    let cursor = 0;
+    let cursor = "0";
     let deleted = 0;
     do {
       // SCAN is non-blocking unlike KEYS — safe for production Redis
-      const [newCursor, keys] = await redis!.scan(cursor, {
+      const result = await redis!.scan(cursor, {
         match: pattern,
         count: 100,
-      });
+      }) as [string, string[]];
+      
+      const [newCursor, keys] = result;
       if (keys.length > 0) {
         await redis!.del(...keys);
         deleted += keys.length;
       }
-      cursor = Number(newCursor);
-    } while (cursor !== 0);
+      cursor = newCursor;
+    } while (cursor !== "0");
     recordSuccess();
     return deleted;
   } catch (error) {
@@ -129,6 +131,10 @@ export async function cacheDeletePattern(pattern: string): Promise<number> {
     return 0;
   }
 }
+
+// ── pendingRequests tracker for coalescing ────────────────────────────────────
+// Prevents multiple simultaneous fetchers for the same key (Cold Start / Stampede)
+const pendingRequests = new Map<string, Promise<any>>();
 
 // ── withCache — cache-aside with circuit breaker + stampede protection ────────
 // Probabilistic early refresh: 1% chance to refresh before TTL expires,
@@ -141,7 +147,6 @@ export async function withCache<T>(
   const cached = await cacheGet<T>(key);
   if (cached !== null) {
     // Probabilistic early refresh — refresh in background 1% of the time
-    // This prevents cache stampede when TTL expires
     if (Math.random() < 0.01) {
       fetcher()
         .then((data) => cacheSet(key, data, ttlSeconds))
@@ -150,10 +155,28 @@ export async function withCache<T>(
     return cached;
   }
 
-  const data = await fetcher();
-  // Fire-and-forget cache write — don't block the response
-  cacheSet(key, data, ttlSeconds).catch(() => {});
-  return data;
+  // Request Coalescing (Stampede Protection)
+  // If a request for this key is already in flight, wait for it instead of starting a new one
+  if (pendingRequests.has(key)) {
+    return pendingRequests.get(key);
+  }
+
+  // Create the promise and track it
+  const request = fetcher().finally(() => {
+    pendingRequests.delete(key);
+  });
+  
+  pendingRequests.set(key, request);
+
+  try {
+    const data = await request;
+    // Fire-and-forget cache write — don't block the response
+    cacheSet(key, data, ttlSeconds).catch(() => {});
+    return data;
+  } catch (error) {
+    // If the fetcher fails, we've already deleted it from pendingRequests in finally
+    throw error;
+  }
 }
 
 /**
