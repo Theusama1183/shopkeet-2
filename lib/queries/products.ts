@@ -69,7 +69,10 @@ async function updateProductApi(
 ): Promise<Product> {
   const res = await fetch(`/api/products/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to update product');
@@ -80,7 +83,10 @@ async function updateProductApi(
 async function deleteProductApi(id: string): Promise<void> {
   const res = await fetch(`/api/products/${id}`, {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -92,7 +98,10 @@ async function deleteProductApi(id: string): Promise<void> {
 async function bulkDeleteProductsApi(storeId: string, ids: string[]): Promise<{ deleted: number; errors: string[] }> {
   const res = await fetch(`/api/stores/${storeId}/products/bulk`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
     body: JSON.stringify({ action: 'delete', ids }),
   });
   if (!res.ok) {
@@ -106,7 +115,10 @@ async function bulkDeleteProductsApi(storeId: string, ids: string[]): Promise<{ 
 async function bulkUpdateStatusApi(storeId: string, ids: string[], isActive: boolean): Promise<{ updated: number }> {
   const res = await fetch(`/api/stores/${storeId}/products/bulk`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
     body: JSON.stringify({ action: 'update_status', ids, is_active: isActive }),
   });
   if (!res.ok) {

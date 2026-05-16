@@ -91,7 +91,7 @@ export const PATCH = withCSRFProtection(async (
       );
     }
 
-    const { name, description, price, image, is_active, sku } = validation.data;
+    const { name, description, price, image, images, is_active, status, sku } = validation.data;
 
     // Build update object with snake_case columns
     const updates: Record<string, unknown> = {
@@ -101,8 +101,17 @@ export const PATCH = withCSRFProtection(async (
     if (description !== undefined) updates.description = description ?? null;
     if (price       !== undefined) updates.price       = price;
     if (image       !== undefined) updates.image       = image ?? null;
-    if (is_active   !== undefined) updates.is_active   = is_active;
-    if (sku         !== undefined) updates.sku          = sku ?? null;
+    if (images      !== undefined) updates.images      = images ?? [];
+    if (sku         !== undefined) updates.sku         = sku ?? null;
+
+    // Keep is_active and status in sync — both represent the same concept
+    if (status !== undefined) {
+      updates.status    = status;
+      updates.is_active = status === "active";
+    } else if (is_active !== undefined) {
+      updates.is_active = is_active;
+      updates.status    = is_active ? "active" : "draft";
+    }
 
     const serviceDb = getServiceRoleDatabase();
     const { data: updatedProduct, error: updateError } = await serviceDb

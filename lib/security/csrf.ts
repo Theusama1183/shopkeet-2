@@ -16,46 +16,69 @@ export class CSRFError extends Error {
 }
 
 /**
+ * Extracts the root domain from a host string.
+ * e.g. "admin.lvh.me:3000" → "lvh.me:3000"
+ *      "store.myshop.com"   → "myshop.com"
+ *      "localhost:3000"     → "localhost:3000"
+ */
+function getRootDomain(host: string): string {
+  // Strip port for comparison logic, keep it for final result
+  const [hostname, port] = host.split(':');
+  const parts = hostname.split('.');
+  // localhost or IP — return as-is
+  if (parts.length <= 1) return host;
+  // e.g. lvh.me (2 parts) or myshop.com (2 parts) — return as-is
+  // e.g. admin.lvh.me (3 parts) — strip first subdomain
+  const root = parts.length > 2 ? parts.slice(-2).join('.') : hostname;
+  return port ? `${root}:${port}` : root;
+}
+
+/**
  * Validates CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
- * Uses origin-based validation for same-origin policy enforcement
+ * Uses origin-based validation for same-origin policy enforcement.
+ * Supports subdomain routing (admin.domain.com calling /api/... on same root domain).
  */
 export async function validateCSRF(_req?: NextRequest): Promise<void> {
   const headersList = await headers();
-  
-  const origin = headersList.get('origin');
-  const host = headersList.get('host');
+
+  const origin  = headersList.get('origin');
+  const host    = headersList.get('host');
   const referer = headersList.get('referer');
-  
-  // Allow requests without origin (same-origin requests from older browsers)
-  // But require referer in that case
+
+  // ── Custom header check (fastest path) ───────────────────────────────────
+  // If X-Requested-With is present and correct, skip all other checks.
+  const xRequestedWith = headersList.get('x-requested-with');
+  if (xRequestedWith === 'XMLHttpRequest') return;
+
+  // ── Content-Type check ────────────────────────────────────────────────────
+  // JSON API requests are safe — browsers can't send application/json cross-origin
+  // without a preflight, which would be blocked by CORS.
+  const contentType = headersList.get('content-type');
+  if (contentType?.includes('application/json')) return;
+
+  // ── Origin / Referer check ────────────────────────────────────────────────
   if (!origin && !referer) {
-    throw new CSRFError('Missing origin and referer headers');
+    throw new CSRFError('Missing origin, referer, and X-Requested-With headers');
   }
-  
-  // Validate origin matches host
+
+  const rootHost = host ? getRootDomain(host) : null;
+
   if (origin) {
     const originHost = new URL(origin).host;
-    if (originHost !== host) {
-      throw new CSRFError(`Origin mismatch: ${originHost} !== ${host}`);
+    const rootOrigin = getRootDomain(originHost);
+    if (rootOrigin !== rootHost) {
+      throw new CSRFError(`Origin mismatch: ${rootOrigin} !== ${rootHost}`);
     }
+    return;
   }
-  
-  // Validate referer if origin is missing
-  if (!origin && referer) {
+
+  if (referer) {
     const refererHost = new URL(referer).host;
-    if (refererHost !== host) {
-      throw new CSRFError(`Referer mismatch: ${refererHost} !== ${host}`);
+    const rootReferer = getRootDomain(refererHost);
+    if (rootReferer !== rootHost) {
+      throw new CSRFError(`Referer mismatch: ${rootReferer} !== ${rootHost}`);
     }
-  }
-  
-  // For extra security, check for custom header (prevents simple form submissions)
-  const csrfHeader = headersList.get('x-requested-with');
-  if (!csrfHeader || csrfHeader !== 'XMLHttpRequest') {
-    // Allow if Content-Type is application/json (API requests)
-    const contentType = headersList.get('content-type');
-    if (!contentType?.includes('application/json')) {
-      throw new CSRFError('Missing X-Requested-With header');
-    }
+    return;
   }
 }
 
@@ -69,28 +92,29 @@ export function withCSRFProtection<T extends any[]>(
   return async (...args: T): Promise<Response> => {
     const req = args[0] as NextRequest;
     const method = req.method;
-    
+
     // Only validate CSRF on state-changing methods
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
       try {
         await validateCSRF(req);
       } catch (error) {
         if (error instanceof CSRFError) {
+          console.error('[csrf] Validation failed:', error.message);
           return new Response(
-            JSON.stringify({ 
+            JSON.stringify({
               error: 'CSRF validation failed',
-              code: 'CSRF_ERROR' 
+              code: 'CSRF_ERROR',
             }),
-            { 
+            {
               status: 403,
-              headers: { 'Content-Type': 'application/json' }
+              headers: { 'Content-Type': 'application/json' },
             }
           );
         }
         throw error;
       }
     }
-    
+
     return handler(...args);
   };
 }

@@ -19,7 +19,19 @@ export const createProductSchema = z.object({
     .max(99999999, "Price is too high"),
   image: z.string().url("Invalid image URL").optional().nullable(),
   images: z
-    .array(z.string().url("Invalid image URL"))
+    .array(
+      z.union([
+        z.string().url("Invalid image URL"),
+        // Accept MediaFile objects from the product form — extract the URL
+        z.object({
+          url: z.string().url("Invalid image URL"),
+          id: z.string().optional(),
+          name: z.string().optional(),
+          type: z.string().optional(),
+          size: z.number().optional(),
+        }).transform((obj) => obj.url),
+      ])
+    )
     .max(10, "Maximum 10 images allowed")
     .optional()
     .default([]),
@@ -54,11 +66,24 @@ export const updateProductSchema = z.object({
     .optional(),
   image: z.string().url("Invalid image URL").optional().nullable(),
   images: z
-    .array(z.string().url("Invalid image URL"))
+    .array(
+      z.union([
+        z.string().url("Invalid image URL"),
+        // Accept MediaFile objects from the product form — extract the URL
+        z.object({
+          url: z.string().url("Invalid image URL"),
+          id: z.string().optional(),
+          name: z.string().optional(),
+          type: z.string().optional(),
+          size: z.number().optional(),
+        }).transform((obj) => obj.url),
+      ])
+    )
     .max(10, "Maximum 10 images allowed")
     .optional()
     .nullable(),
   is_active: z.boolean().optional(),
+  status: z.enum(["active", "draft", "archived", "scheduled"]).optional(),
   sku: z
     .string()
     .max(100, "SKU must be under 100 characters")
