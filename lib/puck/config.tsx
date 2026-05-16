@@ -22,6 +22,7 @@ import {
 import { useStoreId, getEditorStoreId } from "@/lib/puck/store-context";
 import { ProductGrid, ProductCarousel } from "@/components/puck/product-grid";
 import { CountdownTimer } from "@/components/puck/countdown-timer";
+import { ProductCardBlock } from "@/components/puck/product-card-block";
 
 
 // Cast helper — Puck's Config<Props> enforces strict literal types per field,
@@ -44,74 +45,297 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function MockProductCard({
-  index,
-  cardStyle,
-  showPrice,
-  showBadge,
-  badgeText,
-  showAddToCart,
-}: {
-  index: number;
-  cardStyle: string;
+// ── Dynamic default: always 30 days from now ──────────────────────────────────
+const defaultCountdownDate = (() => {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+})();
+
+// ── Component prop types ───────────────────────────────────────────────────────
+// One interface per Puck component. Must exactly match the fields defined
+// in each component's `fields` object below.
+
+interface AnnouncementBarProps {
+  text: string;
+  link: string;
+  linkText: string;
+  bgColor: string;
+  textColor: string;
+  dismissible: boolean;
+}
+
+interface HeroSectionProps {
+  title: string;
+  subtitle: string;
+  backgroundType: "gradient" | "image" | "color";
+  backgroundImage: string;
+  gradientFrom: string;
+  gradientTo: string;
+  bgColor: string;
+  overlayOpacity: number;
+  textAlign: "left" | "center" | "right";
+  minHeight: "sm" | "md" | "lg" | "full";
+  ctaText: string;
+  ctaLink: string;
+  ctaVariant: "default" | "outline" | "white";
+  secondaryCtaText: string;
+  secondaryCtaLink: string;
+  textColor: string;
+}
+
+interface SocialProofBarProps {
+  stats: Array<{ value: string; label: string }>;
+  bgColor: string;
+  textColor: string;
+}
+
+interface HeadingBlockProps {
+  text: string;
+  level: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+  size: "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
+  align: "left" | "center" | "right";
+  color: string;
+}
+
+interface RichTextBlockProps {
+  content: string;
+  align: "left" | "center" | "right";
+  maxWidth: "narrow" | "medium" | "wide" | "full";
+}
+
+interface ButtonBlockProps {
+  text: string;
+  href: string;
+  variant: "primary" | "outline" | "ghost" | "white";
+  size: "sm" | "md" | "lg";
+  align: "left" | "center" | "right";
+  icon: "none" | "arrow" | "cart" | "heart";
+  selectorID: string;
+  fullWidth: boolean;
+}
+
+interface ImageBlockProps {
+  src: string;
+  alt: string;
+  caption: string;
+  rounded: "none" | "sm" | "md" | "lg" | "full";
+  shadow: boolean;
+  aspectRatio: "auto" | "square" | "video" | "portrait";
+  align: "left" | "center" | "right";
+}
+
+interface VideoBlockProps {
+  src: string;
+  poster: string;
+  autoplay: boolean;
+  loop: boolean;
+  muted: boolean;
+  controls: boolean;
+  aspectRatio: "video" | "square";
+  rounded: "none" | "sm" | "md" | "lg";
+}
+
+interface DividerBlockProps {
+  style: "solid" | "dashed" | "dotted" | "gradient";
+  color: string;
+  thickness: number;
+  spacing: "sm" | "md" | "lg" | "xl";
+}
+
+interface SpacerBlockProps {
+  height: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+}
+
+interface ProductGridProps {
+  title: string;
+  subtitle: string;
+  columns: number;
+  gap: "sm" | "md" | "lg";
+  cardStyle: "default" | "minimal" | "bordered" | "shadow";
   showPrice: boolean;
   showBadge: boolean;
   badgeText: string;
   showAddToCart: boolean;
-}) {
-  const names = ["Classic White Tee", "Leather Wallet", "Wireless Earbuds", "Canvas Backpack", "Silk Scarf", "Running Shoes", "Ceramic Mug", "Sunglasses"];
-  const prices = [29.99, 49.99, 89.99, 69.99, 39.99, 119.99, 24.99, 59.99];
-  const name = names[index % names.length];
-  const price = prices[index % prices.length];
-
-  const cardClasses: Record<string, string> = {
-    default: "bg-white rounded-2xl overflow-hidden group hover:shadow-xl transition-all duration-300",
-    minimal: "bg-transparent group",
-    bordered: "bg-white rounded-2xl overflow-hidden border border-zinc-200 group hover:border-violet-300 transition-all duration-300",
-    shadow: "bg-white rounded-2xl overflow-hidden shadow-md group hover:shadow-xl transition-all duration-300",
-  };
-
-  return (
-    <div className={cardClasses[cardStyle] || cardClasses.default}>
-      <div className="relative aspect-square bg-linear-to-br from-zinc-100 to-zinc-200 overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Package className="w-12 h-12 text-zinc-300" />
-        </div>
-        {showBadge && badgeText && (
-          <span className="absolute top-3 left-3 bg-violet-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-            {badgeText}
-          </span>
-        )}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-violet-50 transition-colors">
-            <Heart className="w-4 h-4 text-zinc-500" />
-          </button>
-        </div>
-      </div>
-      <div className="p-4">
-        <h3 className="font-semibold text-zinc-900 text-sm mb-1 truncate">{name}</h3>
-        <div className="flex items-center gap-1 mb-2">
-          <StarRating rating={4} />
-          <span className="text-xs text-zinc-400">(24)</span>
-        </div>
-        {showPrice && (
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-zinc-900">${price.toFixed(2)}</span>
-            {showAddToCart && (
-              <button className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                <ShoppingCart className="w-3.5 h-3.5" />
-                Add
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  perPage: number;
+  showPagination: boolean;
+  sort: "newest" | "oldest" | "price_asc" | "price_desc" | "name_asc";
+  collectionId: string;
+  categoryId: string;
+  brandId: string;
+  tagId: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const config: Config<any> = {
+interface ProductCarouselProps {
+  title: string;
+  subtitle: string;
+  slidesVisible: number;
+  cardStyle: "default" | "minimal" | "bordered";
+  showPrice: boolean;
+  showAddToCart: boolean;
+  showArrows: boolean;
+  showDots: boolean;
+  autoplay: boolean;
+  autoplaySpeed: number;
+  limit: number;
+  sort: "newest" | "oldest" | "price_asc" | "price_desc" | "name_asc";
+  collectionId: string;
+  categoryId: string;
+  brandId: string;
+  tagId: string;
+}
+
+interface ProductCardProps {
+  productId: string;
+  showDescription: boolean;
+  showBadge: boolean;
+  badgeText: string;
+  badgeColor: string;
+  showAddToCart: boolean;
+  cardStyle: "default" | "minimal" | "bordered";
+}
+
+interface FeatureSectionProps {
+  title: string;
+  subtitle: string;
+  columns: 2 | 3 | 4;
+  layout: "icon-top" | "icon-left" | "card";
+  features: Array<{ icon: string; title: string; description: string; color: string }>;
+  bgColor: string;
+}
+
+interface TestimonialsBlockProps {
+  title: string;
+  subtitle: string;
+  layout: "grid" | "carousel" | "masonry";
+  columns: 2 | 3;
+  testimonials: Array<{ name: string; role: string; text: string; rating: number; avatar: string }>;
+  bgColor: string;
+}
+
+interface NewsletterBlockProps {
+  title: string;
+  subtitle: string;
+  placeholder: string;
+  buttonText: string;
+  bgColor: string;
+  layout: "inline" | "stacked" | "card";
+}
+
+interface BannerBlockProps {
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  ctaLink: string;
+  bgColor: string;
+  textColor: string;
+  image: string;
+  layout: "left" | "center" | "right";
+}
+
+interface FAQBlockProps {
+  title: string;
+  subtitle: string;
+  items: Array<{ question: string; answer: string }>;
+  layout: "accordion" | "grid";
+}
+
+interface TrustBadgesProps {
+  badges: Array<{ icon: string; title: string; subtitle: string }>;
+  layout: "horizontal" | "grid";
+  bgColor: string;
+}
+
+interface SocialLinksProps {
+  instagram: string;
+  twitter: string;
+  facebook: string;
+  youtube: string;
+  align: "left" | "center" | "right";
+  size: "sm" | "md" | "lg";
+  style: "filled" | "outline" | "ghost";
+  color: string;
+}
+
+interface CountdownBlockProps {
+  title: string;
+  targetDate: string;
+  bgColor: string;
+  textColor: string;
+  showDays: boolean;
+  showHours: boolean;
+  showMinutes: boolean;
+  showSeconds: boolean;
+}
+
+interface ImageGalleryProps {
+  title: string;
+  images: Array<{ src: string; alt: string; caption: string }>;
+  columns: 2 | 3 | 4;
+  gap: "sm" | "md" | "lg";
+  rounded: "none" | "sm" | "md" | "lg";
+}
+
+interface ContactSectionProps {
+  title: string;
+  subtitle: string;
+  email: string;
+  phone: string;
+  address: string;
+  showForm: boolean;
+  bgColor: string;
+}
+
+interface TwoColumnSectionProps {
+  leftContent: string;
+  rightContent: string;
+  leftImage: string;
+  rightImage: string;
+  gap: "sm" | "md" | "lg";
+  verticalAlign: "top" | "center" | "bottom";
+  reverseOnMobile: boolean;
+  leftWidth: "1/3" | "1/2" | "2/3";
+}
+
+interface CategoryGridProps {
+  title: string;
+  subtitle: string;
+  categories: Array<{ name: string; image: string; link: string; count: number }>;
+  columns: 2 | 3 | 4;
+  style: "card" | "overlay" | "minimal";
+}
+
+// Single map — every component name maps to its props interface
+type ComponentMap = {
+  AnnouncementBar:   AnnouncementBarProps;
+  HeroSection:       HeroSectionProps;
+  SocialProofBar:    SocialProofBarProps;
+  HeadingBlock:      HeadingBlockProps;
+  RichTextBlock:     RichTextBlockProps;
+  ButtonBlock:       ButtonBlockProps;
+  ImageBlock:        ImageBlockProps;
+  VideoBlock:        VideoBlockProps;
+  DividerBlock:      DividerBlockProps;
+  SpacerBlock:       SpacerBlockProps;
+  ProductGrid:       ProductGridProps;
+  ProductCarousel:   ProductCarouselProps;
+  ProductCard:       ProductCardProps;
+  FeatureSection:    FeatureSectionProps;
+  TestimonialsBlock: TestimonialsBlockProps;
+  NewsletterBlock:   NewsletterBlockProps;
+  BannerBlock:       BannerBlockProps;
+  FAQBlock:          FAQBlockProps;
+  TrustBadges:       TrustBadgesProps;
+  SocialLinks:       SocialLinksProps;
+  CountdownBlock:    CountdownBlockProps;
+  ImageGallery:      ImageGalleryProps;
+  ContactSection:    ContactSectionProps;
+  TwoColumnSection:  TwoColumnSectionProps;
+  CategoryGrid:      CategoryGridProps;
+};
+
+export const config: Config<ComponentMap> = {
   components: {
 
     // Announcement Bar
@@ -468,7 +692,7 @@ export const config: Config<any> = {
         selectorID: { type: "text", label: "ID" },
         fullWidth: f(toggleButtonField({ label: "Full Width", onLabel: "Yes", offLabel: "No" })),
       },
-      defaultProps: { text: "Shop Now", href: "#", variant: "primary", size: "md", align: "center", icon: "arrow", fullWidth: false },
+      defaultProps: { text: "Shop Now", href: "#", variant: "primary", size: "md", align: "center", icon: "arrow", selectorID: "", fullWidth: false },
       render: ({ text, href, variant, size, align, icon, fullWidth, selectorID }) => {
         const variantClass: Record<string, string> = {
           primary: "bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200",
@@ -901,18 +1125,22 @@ export const config: Config<any> = {
         showAddToCart: true,
         cardStyle: "default",
       },
-      render: ({ showBadge, badgeText, showAddToCart, cardStyle }) => (
-        <div className="py-4 px-6 max-w-sm mx-auto">
-          <MockProductCard
-            index={0}
-            cardStyle={cardStyle}
-            showPrice={true}
+      render: ({ productId, showDescription, showBadge, badgeText, badgeColor, showAddToCart, cardStyle }) => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const storeId = useStoreId();
+        return (
+          <ProductCardBlock
+            storeId={storeId ?? ""}
+            productId={productId}
+            showDescription={showDescription}
             showBadge={showBadge}
             badgeText={badgeText}
+            badgeColor={badgeColor}
             showAddToCart={showAddToCart}
+            cardStyle={cardStyle}
           />
-        </div>
-      ),
+        );
+      },
     },
 
     // Feature Section
@@ -1371,7 +1599,7 @@ export const config: Config<any> = {
       },
       defaultProps: {
         title: "Limited Time Offer",
-        targetDate: "2024-12-31 23:59",
+        targetDate: defaultCountdownDate,
         bgColor: "#7c3aed",
         textColor: "#ffffff",
         showDays: true,
@@ -1619,6 +1847,7 @@ export const config: Config<any> = {
                         }),
                       }}
                     />
+                  )}
                 </div>
 
                 {/* Right Column */}
@@ -1639,6 +1868,7 @@ export const config: Config<any> = {
                         }),
                       }}
                     />
+                  )}
                 </div>
               </div>
             </div>
