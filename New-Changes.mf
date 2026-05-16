@@ -1,0 +1,213 @@
+Full Zod Verification Report — ShopKeet
+
+✅ Jo Bilkul Sahi Hai
+lib/validations/page.ts — EXCELLENT
+Yeh file best-in-class hai pore codebase mein:
+
+Puck JSON structure validate hoti hai (puckContentSchema)
+512KB size limit enforce hoti hai validatePuckContent() mein
+Slug reserved words check hai (api, admin, auth, etc.)
+transform() se whitespace trim hoti hai
+metaTitle 60 chars, metaDescription 160 chars — SEO correct limits
+updatePageSchema mein slug uniqueness check bhi API route mein baad mein hota hai
+
+lib/validations/store.ts — GOOD
+
+50+ reserved subdomains block hain
+Regex se attack vectors block hain
+transform() se XSS characters <> strip hoti hain
+validateSubdomain() aur validateStoreInput() helper functions exposed hain
+
+lib/validations/auth.ts — GOOD
+
+Password 12+ chars, uppercase, lowercase, number, special char — sab enforce hai
+Email lowercase transform hai
+Signup aur login alag schemas hain — correct
+
+lib/validations/inventory.ts — GOOD
+
+UUID validation on all foreign keys
+createTransferSchema mein .refine() se source ≠ destination check hai
+Sale schema mein price cents mein hai (int, min 0)
+
+app/api/stores/[id]/products/route.ts — GOOD
+
+createProductSchema.safeParse() properly use ho rahi hai
+Rate limiting per store+user ID hai
+Audit log + Inngest event fire ho raha hai
+Cache invalidation pattern correct hai
+
+app/api/storefront/[storeId]/products/[productId]/route.ts — GOOD
+
+getAnonDatabase() correct use ho rahi hai (public endpoint)
+Sirf safe fields exposed hain: id, name, price, image, images, description, slug
+is_active = true aur deleted_at IS NULL dono filters hain
+Store existence verify hoti hai pehle
+
+
+🔴 CRITICAL — Zod Bilkul Nahi Hai
+app/api/stores/[id]/popups/route.ts — POST
+typescript// Abhi ka code:
+const body = await req.json();
+const { name } = body;
+if (!name?.trim()) {
+  return NextResponse.json({ error: "Name is required" }, { status: 400 });
+}
+const sanitizedName = name.trim().replace(/[<>]/g, '').substring(0, 200);
+Koi Zod nahi. Sirf name check ho raha hai. Baaki fields — trigger, conditions, content — blindly as any cast hokar DB mein ja rahi hain. Koi structure validation nahi, koi type check nahi, koi size limit nahi trigger object pe.
+app/api/stores/[id]/templates/route.ts — POST
+typescript// Abhi ka code:
+const body = await req.json();
+const { name, type } = body;
+if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
+if (!type?.trim()) return NextResponse.json({ error: "Type is required" }, { status: 400 });
+const sanitizedType = type.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+Same problem. type field sirf string sanitize ho raha hai — lekin koi enum check nahi ke valid values kya hain (header, footer, product-card). Merchant invalid type bhej sakta hai aur wo DB mein store ho jaayega. Phir template rendering break ho jaayegi silently.
+
+🟠 HIGH — Zod Partial Ya Incomplete Hai
+lib/validations/product.ts — Missing Fields
+typescript// Jo abhi hai:
+export const createProductSchema = z.object({
+  name, description, price, image, storeId
+});
+
+// Jo missing hai:
+images: z.array(z.string().url()).max(10).optional(),  // multiple images missing
+sku: z.string().max(100).optional(),                    // sku sirf updateSchema mein hai
+is_active: z.boolean().optional(),                      // create mein nahi hai
+slug: z.string()...                                     // product slug missing
+API route mein body.sku aur body.is_active ko as any cast karke directly DB mein daal diya ja raha hai — validation bypass hokar. Yeh Zod schema ki purpose defeat karti hai.
+typescript// route.ts mein:
+sku: (body as any).sku || null,        // ← Zod ne validate nahi kiya
+is_active: (body as any).is_active !== false,  // ← Zod ne validate nahi kiya
+app/api/stores/[id]/templates/[templateId]/route.ts — PUT
+typescriptconst { name, content, isActive, conditions } = body;
+// Koi Zod nahi — sab raw destructure
+if (name !== undefined) updateData.name = name as string;
+if (content !== undefined) updateData.content = content as Database[...];
+content field (Puck JSON) bina kisi validation ke template mein save ho sakta hai. 512KB limit, structure check, kuch nahi.
+app/api/stores/[id]/popups/[popupId]/route.ts — PUT
+typescriptconst { name, content, trigger, conditions, isActive } = body;
+// Koi Zod nahi
+if (trigger !== undefined) updateData.trigger = trigger as Database[...];
+trigger object mein event, delay, frequency hone chahiye — koi validation nahi. Merchant { event: null, delay: "hello", frequency: 999 } bhej sakta hai aur wo DB mein store ho jaayega.
+
+🟡 MEDIUM — Zod Schemas Exist Par Use Nahi Ho Rahe
+lib/validations/ mein schemas hain lekin use nahi hote:
+updateProductSchema exist karta hai lekin app/api/products/[id]/route.ts mein check karo ke use ho raha hai ya nahi. Alag audit mein yeh file nahi dekhi — verify karna zaroori hai.
+
+Missing Validation Schemas — Jo Hone Chahiye
+SchemaFileStatuscreatePopupSchemalib/validations/popup.ts❌ File exist nahi kartiupdatePopupSchemalib/validations/popup.ts❌ File exist nahi karticreateTemplateSchemalib/validations/template.ts❌ File exist nahi kartiupdateTemplateSchemalib/validations/template.ts❌ File exist nahi kartiimages[] in productlib/validations/product.ts❌ Missing fieldsku in createProductlib/validations/product.ts❌ Missing fieldis_active in createProductlib/validations/product.ts❌ Missing field
+
+Fix Priority Order
+Abhi karo — is exact order mein:
+1. lib/validations/popup.ts — nayi file banao:
+typescriptimport { z } from "zod";
+
+const popupTriggerSchema = z.object({
+  event: z.enum(["on-load", "on-exit", "on-scroll", "on-click", "on-timer"]),
+  delay: z.number().int().min(0).max(60).optional(),
+  scrollPercentage: z.number().int().min(0).max(100).optional(),
+  frequency: z.enum(["once-per-session", "once-per-day", "always"]),
+});
+
+const popupConditionsSchema = z.object({
+  rules: z.array(z.record(z.string(), z.unknown())).max(10),
+});
+
+const puckContentSchema = z.object({
+  content: z.array(z.record(z.string(), z.unknown())),
+  root: z.object({ props: z.record(z.string(), z.unknown()).optional() }).optional(),
+});
+
+const MAX_POPUP_JSON_BYTES = 256 * 1024; // 256KB limit for popups
+
+export const createPopupSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(200, "Name must be under 200 characters")
+    .transform((val) => val.trim().replace(/[<>"'&]/g, "")),
+});
+
+export const updatePopupSchema = z.object({
+  name: z.string().min(1).max(200)
+    .transform((val) => val.trim().replace(/[<>"'&]/g, ""))
+    .optional(),
+  content: z.record(z.string(), z.unknown())
+    .refine((val) => {
+      try {
+        const json = JSON.stringify(val);
+        if (json.length > MAX_POPUP_JSON_BYTES) return false;
+        return puckContentSchema.safeParse(val).success;
+      } catch { return false; }
+    }, "Content must be valid Puck JSON under 256KB")
+    .optional(),
+  trigger: popupTriggerSchema.optional(),
+  conditions: popupConditionsSchema.optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type CreatePopupInput = z.infer<typeof createPopupSchema>;
+export type UpdatePopupInput = z.infer<typeof updatePopupSchema>;
+2. lib/validations/template.ts — nayi file banao:
+typescriptimport { z } from "zod";
+
+export const TEMPLATE_TYPES = ["header", "footer", "product-card", "announcement"] as const;
+export type TemplateType = typeof TEMPLATE_TYPES[number];
+
+const puckContentSchema = z.object({
+  content: z.array(z.record(z.string(), z.unknown())),
+  root: z.object({ props: z.record(z.string(), z.unknown()).optional() }).optional(),
+});
+
+const MAX_TEMPLATE_JSON_BYTES = 512 * 1024;
+
+export const createTemplateSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(200, "Name must be under 200 characters")
+    .transform((val) => val.trim().replace(/[<>"'&]/g, "")),
+  type: z.enum(TEMPLATE_TYPES, {
+    errorMap: () => ({ message: `Type must be one of: ${TEMPLATE_TYPES.join(", ")}` }),
+  }),
+});
+
+export const updateTemplateSchema = z.object({
+  name: z.string().min(1).max(200)
+    .transform((val) => val.trim().replace(/[<>"'&]/g, ""))
+    .optional(),
+  content: z.record(z.string(), z.unknown())
+    .refine((val) => {
+      try {
+        const json = JSON.stringify(val);
+        if (json.length > MAX_TEMPLATE_JSON_BYTES) return false;
+        return puckContentSchema.safeParse(val).success;
+      } catch { return false; }
+    }, "Content must be valid Puck JSON under 512KB")
+    .optional(),
+  isActive: z.boolean().optional(),
+  conditions: z.record(z.string(), z.unknown()).optional(),
+});
+
+export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
+export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>;
+3. lib/validations/product.ts — missing fields add karo:
+typescript// createProductSchema mein add karo:
+sku: z.string().max(100, "SKU must be under 100 characters")
+  .regex(/^[a-zA-Z0-9\-_]+$/, "SKU can only contain letters, numbers, hyphens, underscores")
+  .optional().nullable(),
+isActive: z.boolean().optional().default(true),
+images: z.array(z.string().url("Invalid image URL")).max(10, "Maximum 10 images allowed").optional().default([]),
+4. API routes mein naye schemas use karo:
+
+popups/route.ts POST → createPopupSchema.safeParse(body)
+popups/[popupId]/route.ts PUT → updatePopupSchema.safeParse(body)
+templates/route.ts POST → createTemplateSchema.safeParse(body)
+templates/[templateId]/route.ts PUT → updateTemplateSchema.safeParse(body)
+products/route.ts POST → createProductSchema mein naye fields add karo, as any hatao
+
+
+Final Zod Coverage Score
+AreaScoreGapPages9/10Almost perfectAuth9/10SolidStore8/10GoodProducts6/10Missing sku, images, is_active in schemaInventory8/10GoodPopups2/10No schema file existsTemplates2/10No schema file existsOverall6/102 entire domains unvalidated

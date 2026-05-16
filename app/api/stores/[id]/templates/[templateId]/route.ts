@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
 import { invalidateTag } from "@/lib/cache-helpers";
 import type { Database } from "@/types/supabase";
+import { updateTemplateSchema } from "@/lib/validations/template";
 
 type TemplateUpdate = Database["public"]["Tables"]["templates"]["Update"];
 
@@ -59,16 +60,30 @@ export async function PUT(
   
   if (storeError || !store) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const body = await req.json();
-  const { name, content, isActive, conditions } = body;
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const parsed = updateTemplateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Validation failed" },
+      { status: 400 }
+    );
+  }
+
+  const { name, content, isActive, conditions } = parsed.data;
 
   const updateData: TemplateUpdate = {
     updated_at: new Date().toISOString(),
   };
-  if (name !== undefined) updateData.name = name as string;
-  if (content !== undefined) updateData.content = content as Database["public"]["Tables"]["templates"]["Row"]["content"];
+  if (name       !== undefined) updateData.name       = name;
+  if (content    !== undefined) updateData.content    = content as Database["public"]["Tables"]["templates"]["Row"]["content"];
   if (conditions !== undefined) updateData.conditions = conditions as Database["public"]["Tables"]["templates"]["Row"]["conditions"];
-  if (isActive !== undefined) updateData.is_active = isActive as boolean;
+  if (isActive   !== undefined) updateData.is_active  = isActive;
 
   // ── Atomic transaction: deactivate others + activate this one ────────────
   const serviceDb = getServiceRoleDatabase();

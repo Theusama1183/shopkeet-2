@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
+import { createPopupSchema } from "@/lib/validations/popup";
 
 // GET /api/stores/[id]/popups — list all popups for a store
 export async function GET(
@@ -57,21 +58,28 @@ export async function POST(
   
   if (storeError || !store) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const body = await req.json();
-  const { name } = body;
-
-  if (!name?.trim()) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  // Sanitize name to prevent XSS
-  const sanitizedName = name.trim().replace(/[<>]/g, '').substring(0, 200);
+  const parsed = createPopupSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Validation failed" },
+      { status: 400 }
+    );
+  }
+
+  const { name } = parsed.data;
 
   const serviceDb = getServiceRoleDatabase();
   const { data: created, error: insertError } = await serviceDb
     .from('popups')
     .insert({
-      name: sanitizedName,
+      name,
       content: { content: [], root: { props: {} } },
       trigger: { event: "on-load", delay: 3, frequency: "once-per-session" },
       conditions: { rules: [] },

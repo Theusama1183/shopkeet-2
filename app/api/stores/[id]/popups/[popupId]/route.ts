@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
 import { inngest } from "@/lib/inngest/client";
 import type { Database } from "@/types/supabase";
+import { updatePopupSchema } from "@/lib/validations/popup";
 
 type PopupUpdate = Database["public"]["Tables"]["popups"]["Update"];
 
@@ -72,16 +73,24 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const { name, content, trigger, conditions, isActive } = body;
+    const parsed = updatePopupSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Validation failed" },
+        { status: 400 }
+      );
+    }
+
+    const { name, content, trigger, conditions, isActive } = parsed.data;
 
     const updateData: PopupUpdate = {
       updated_at: new Date().toISOString(),
     };
-    if (name       !== undefined) updateData.name       = name as string;
+    if (name       !== undefined) updateData.name       = name;
     if (content    !== undefined) updateData.content    = content as Database["public"]["Tables"]["popups"]["Row"]["content"];
     if (trigger    !== undefined) updateData.trigger    = trigger as Database["public"]["Tables"]["popups"]["Row"]["trigger"];
     if (conditions !== undefined) updateData.conditions = conditions as Database["public"]["Tables"]["popups"]["Row"]["conditions"];
-    if (isActive   !== undefined) updateData.is_active  = isActive as boolean;
+    if (isActive   !== undefined) updateData.is_active  = isActive;
 
     const serviceDb = getServiceRoleDatabase();
     const { data: updatedData, error: updateError } = await serviceDb

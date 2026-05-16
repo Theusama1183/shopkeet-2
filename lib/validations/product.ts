@@ -18,6 +18,18 @@ export const createProductSchema = z.object({
     .min(0, "Price must be at least 0")
     .max(99999999, "Price is too high"),
   image: z.string().url("Invalid image URL").optional().nullable(),
+  images: z
+    .array(z.string().url("Invalid image URL"))
+    .max(10, "Maximum 10 images allowed")
+    .optional()
+    .default([]),
+  sku: z
+    .string()
+    .max(100, "SKU must be under 100 characters")
+    .regex(/^[a-zA-Z0-9\-_]+$/, "SKU can only contain letters, numbers, hyphens, underscores")
+    .optional()
+    .nullable(),
+  isActive: z.boolean().optional().default(true),
   storeId: z.string().uuid("Invalid store ID"),
 });
 
@@ -41,8 +53,18 @@ export const updateProductSchema = z.object({
     .max(99999999, "Price is too high")
     .optional(),
   image: z.string().url("Invalid image URL").optional().nullable(),
+  images: z
+    .array(z.string().url("Invalid image URL"))
+    .max(10, "Maximum 10 images allowed")
+    .optional()
+    .nullable(),
   is_active: z.boolean().optional(),
-  sku: z.string().max(100).optional().nullable(),
+  sku: z
+    .string()
+    .max(100, "SKU must be under 100 characters")
+    .regex(/^[a-zA-Z0-9\-_]+$/, "SKU can only contain letters, numbers, hyphens, underscores")
+    .optional()
+    .nullable(),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;

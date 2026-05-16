@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDatabase, getServiceRoleDatabase } from "@/lib/supabase/database";
+import { createTemplateSchema } from "@/lib/validations/template";
 
 // GET /api/stores/[id]/templates — list all templates for a store
 export async function GET(
@@ -58,24 +59,29 @@ export async function POST(
   
   if (storeError || !store) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const body = await req.json();
-  const { name, type } = body;
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
-  if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
-  if (!type?.trim()) return NextResponse.json({ error: "Type is required" }, { status: 400 });
+  const parsed = createTemplateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Validation failed" },
+      { status: 400 }
+    );
+  }
 
-  // Sanitize inputs to prevent XSS - comprehensive character filtering
-  const sanitizedName = name.trim()
-    .replace(/[<>"'&]/g, '') // Remove dangerous HTML/JS characters
-    .substring(0, 200);
-  const sanitizedType = type.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+  const { name, type } = parsed.data;
 
   const serviceDb = getServiceRoleDatabase();
   const { data: created, error: insertError } = await serviceDb
     .from('templates')
     .insert({
-      name: sanitizedName,
-      type: sanitizedType,
+      name,
+      type,
       content: { content: [], root: { props: {} } },
       is_active: false,
       store_id: id,

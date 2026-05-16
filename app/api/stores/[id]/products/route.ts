@@ -142,7 +142,7 @@ export async function POST(
       );
     }
 
-    const { name, description, price, image } = validation.data;
+    const { name, description, price, image, images, sku, isActive } = validation.data;
 
     // Create product
     const serviceDb = getServiceRoleDatabase();
@@ -152,9 +152,10 @@ export async function POST(
         name,
         description,
         price,
-        image,
-        sku: (body as any).sku || null,
-        is_active: (body as any).is_active !== false,
+        image: image ?? null,
+        images: images ?? [],
+        sku: sku ?? null,
+        is_active: isActive ?? true,
         store_id: storeId,
       } as any)
       .select()
