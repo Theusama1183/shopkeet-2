@@ -1,4 +1,3 @@
-// React Query hooks
 export * from './stores';
 export * from './products';
 export * from './pages';
@@ -9,4 +8,5 @@ export * from './categories';
 export * from './brands';
 export * from './collections';
 export * from './inventory';
+export * from './ai-generate';
 export { useQueryLoading } from './use-query-loading';

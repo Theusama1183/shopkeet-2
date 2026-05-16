@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useEffect } from "react";
-import { Puck, Data } from "@puckeditor/core";
+import { useCallback, useRef, useEffect, useState } from "react";
+import { Puck, Data, createUsePuck } from "@puckeditor/core";
 // CSS imported globally in app/layout.tsx to avoid chunk loading issues
 import { getLayoutConfig } from "@/lib/puck/layouts";
 import { setEditorStoreId } from "@/lib/puck/store-context";
-import { Monitor, Tablet, Smartphone } from "lucide-react";
+import { Monitor, Tablet, Smartphone, Sparkles } from "lucide-react";
+import { AiGeneratePanel } from "@/components/puck/ai-generate-panel";
 
 interface PuckEditorProps {
   /** Initial data — only used on first mount. Changes to this prop are ignored
@@ -14,7 +15,7 @@ interface PuckEditorProps {
   onPublish: (data: Data) => Promise<void>;
   onSave?: (data: Data) => Promise<void>;
   layoutId?: string;
-  /** Store ID — used by asyncSearchableSelectField to fetch filter options */
+  /** Store ID — used by asyncSearchableSelectField and AI generation */
   storeId?: string;
 }
 
@@ -39,6 +40,48 @@ const VIEWPORTS = [
     icon: <Smartphone size={14} />,
   },
 ];
+
+// usePuck hook — used inside the headerActions override to dispatch data updates
+const usePuck = createUsePuck();
+
+// ── AI Button — rendered inside Puck's header via overrides.headerActions ─────
+// Must be a separate component so it can call usePuck() inside the Puck tree
+function AiHeaderButton({ storeId }: { storeId: string }) {
+  const [showPanel, setShowPanel] = useState(false);
+  const { dispatch } = usePuck((s) => s);
+
+  const handleApply = useCallback(
+    (generatedData: Data) => {
+      // Replace the entire page content using Puck's internal dispatch
+      dispatch({
+        type: "setData",
+        data: generatedData,
+      });
+    },
+    [dispatch]
+  );
+
+  return (
+    <>
+      <button
+        onClick={() => setShowPanel(true)}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors shadow-sm"
+        title="Generate page with AI"
+      >
+        <Sparkles className="w-3.5 h-3.5" />
+        AI Generate
+      </button>
+
+      {showPanel && (
+        <AiGeneratePanel
+          storeId={storeId}
+          onApply={handleApply}
+          onClose={() => setShowPanel(false)}
+        />
+      )}
+    </>
+  );
+}
 
 export function PuckEditor({ data, onPublish, onSave, storeId }: PuckEditorProps) {
   // Capture initial data once — never update this ref so Puck never remounts
@@ -67,6 +110,18 @@ export function PuckEditor({ data, onPublish, onSave, storeId }: PuckEditorProps
     []
   );
 
+  // ── Puck overrides — inject AI button into the header ─────────────────────
+  const overrides = useRef({
+    headerActions: ({ children }: { children: React.ReactNode }) => (
+      <>
+        {/* AI Generate button — only shown when storeId is available */}
+        {storeId && <AiHeaderButton storeId={storeId} />}
+        {/* Default Puck header actions (publish button etc.) */}
+        {children}
+      </>
+    ),
+  }).current;
+
   return (
     <div className="h-screen">
       <Puck
@@ -78,6 +133,7 @@ export function PuckEditor({ data, onPublish, onSave, storeId }: PuckEditorProps
         headerPath="/"
         iframe={{ enabled: true }}
         viewports={VIEWPORTS}
+        overrides={overrides}
       />
     </div>
   );

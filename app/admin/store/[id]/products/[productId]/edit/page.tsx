@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { ProductForm } from "@/components/products/ProductForm";
+import { ProductEditorPage } from "@/components/products/product-editor-page";
 
 export default function EditProductPage({
   params,
@@ -9,5 +9,5 @@ export default function EditProductPage({
   params: Promise<{ id: string; productId: string }>;
 }) {
   const { id: storeId, productId } = use(params);
-  return <ProductForm storeId={storeId} productId={productId} mode="edit" />;
+  return <ProductEditorPage mode="edit" storeId={storeId} productId={productId} />;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { ProductForm } from "@/components/products/ProductForm";
+import { ProductEditorPage } from "@/components/products/product-editor-page";
 
 export default function NewProductPage({
   params,
@@ -9,5 +9,6 @@ export default function NewProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: storeId } = use(params);
-  return <ProductForm storeId={storeId} mode="create" />;
+  return <ProductEditorPage mode="new" storeId={storeId} />;
 }
+
