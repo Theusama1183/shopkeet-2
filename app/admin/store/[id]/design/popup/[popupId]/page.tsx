@@ -1,14 +1,13 @@
 "use client";
 
 import { use, useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Data } from "@puckeditor/core";
 import {
   ArrowLeft, Save, Check, Globe, Clock, Settings, X,
   Search, Trash2, Plus, ChevronDown, Timer, TrendingUp,
-  LogOut, MousePointer, RefreshCw,
+  LogOut, MousePointer, RefreshCw, AlertCircle,
 } from "lucide-react";
 import {
   type PopupTrigger,
@@ -70,11 +69,12 @@ export default function PopupDesignPage({
   params: Promise<{ id: string; popupId: string }>;
 }) {
   const { id: storeId, popupId } = use(params);
-  const router = useRouter();
   const [popup, setPopup]           = useState<PopupData | null>(null);
   const [content, setContent]       = useState<Data | null>(null);
   const [isSaving, setIsSaving]     = useState(false);
   const [isLoading, setIsLoading]   = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+  const [retryKey, setRetryKey]     = useState(0);
   const [saved, setSaved]           = useState(false);
 
   // Latest content ref — updated by Puck onChange without causing re-renders
@@ -99,11 +99,13 @@ export default function PopupDesignPage({
 
   useEffect(() => {
     if (!storeId || !popupId) return;
+    let cancelled = false;
     Promise.all([
       fetch(`/api/stores/${storeId}/popups/${popupId}`).then(r => r.json()),
       fetch(`/api/stores/${storeId}/pages?includeUnpublished=true`).then(r => r.json()),
       fetch(`/api/stores/${storeId}/products`).then(r => r.json()),
     ]).then(([pData, pageData, prodData]) => {
+      if (cancelled) return;
       setPopup(pData);
       const initialContent = pData.content || { content: [], root: { props: {} } };
       setContent(initialContent);
@@ -115,8 +117,9 @@ export default function PopupDesignPage({
       setPages(Array.isArray(pageData) ? pageData : (pageData.items ?? []));
       setProducts(Array.isArray(prodData) ? prodData : (prodData.items ?? []));
       setIsLoading(false);
-    }).catch(() => router.push(`/admin/store/${storeId}/popups`));
-  }, [storeId, popupId, router]);
+    }).catch(() => { if (!cancelled) setFetchError(true); });
+    return () => { cancelled = true; };
+  }, [storeId, popupId, retryKey]);
 
   // Close sub-selector dropdown on outside click
   useEffect(() => {
@@ -224,6 +227,32 @@ export default function PopupDesignPage({
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-zinc-500">Loading popup editor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 mx-auto mb-3 text-red-400" />
+          <p className="text-zinc-900 font-semibold mb-2">Failed to load popup</p>
+          <p className="text-sm text-zinc-500 mb-4">There was an error loading the editor. Please try again.</p>
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => { setFetchError(false); setIsLoading(true); setRetryKey(k => k + 1); }}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+            >
+              Retry
+            </button>
+            <Link href={`/admin/store/${storeId}/popups`}>
+              <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Popups
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     );

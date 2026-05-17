@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, use } from "react";
-import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Data } from "@puckeditor/core";
 import { Button } from "@/components/ui/button";
@@ -41,10 +40,11 @@ interface PageData {
 }
 
 function DesignPageContent({ storeId, pageId }: { storeId: string; pageId: string }) {
-  const router = useRouter();
   const [page, setPage]           = useState<PageData | null>(null);
   const [isSaving, setIsSaving]   = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+  const [retryKey, setRetryKey]   = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isDirty, setIsDirty]     = useState(false);
   const [editorKey, setEditorKey] = useState(0);
@@ -59,6 +59,7 @@ function DesignPageContent({ storeId, pageId }: { storeId: string; pageId: strin
 
   // ── Load page + store ──────────────────────────────────────────────────────
   useEffect(() => {
+    let cancelled = false;
     const loadPage = async () => {
       try {
         const [pageRes, storeRes] = await Promise.all([
@@ -68,22 +69,24 @@ function DesignPageContent({ storeId, pageId }: { storeId: string; pageId: strin
         if (pageRes.ok) {
           const data = await pageRes.json();
           const storeData = storeRes.ok ? await storeRes.json() : null;
-          setPage({ ...data, store: storeData });
-          latestData.current = data.content;
-          // Populate SEO fields
-          setSeoTitle(data.metaTitle ?? "");
-          setSeoDesc(data.metaDescription ?? "");
-        } else {
-          router.push(`/admin/store/${storeId}/pages`);
+          if (!cancelled) {
+            setPage({ ...data, store: storeData });
+            latestData.current = data.content;
+            setSeoTitle(data.metaTitle ?? "");
+            setSeoDesc(data.metaDescription ?? "");
+          }
+        } else if (!cancelled) {
+          setFetchError(true);
         }
       } catch {
-        router.push(`/admin/store/${storeId}/pages`);
+        if (!cancelled) setFetchError(true);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
     loadPage();
-  }, [storeId, pageId, router]);
+    return () => { cancelled = true; };
+  }, [storeId, pageId, retryKey]);
 
   // ── Unsaved changes warning ────────────────────────────────────────────────
   useEffect(() => {
@@ -192,13 +195,35 @@ function DesignPageContent({ storeId, pageId }: { storeId: string; pageId: strin
     ? `https://${page.store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${page.slug}?preview=${pageId}`
     : null;
 
-  // ── Loading / not found ────────────────────────────────────────────────────
+  // ── Loading / error / not found ──────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-zinc-500">Loading editor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-zinc-900 font-semibold mb-2">Failed to load page</p>
+          <p className="text-sm text-zinc-500 mb-4">There was an error loading the editor. Please try again.</p>
+          <div className="flex items-center justify-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => { setFetchError(false); setIsLoading(true); setRetryKey(k => k + 1); }}>
+              Retry
+            </Button>
+            <Link href={`/admin/store/${storeId}/pages`}>
+              <Button size="sm" variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Pages
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );

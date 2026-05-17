@@ -16,7 +16,7 @@
 # ── Environment variables ─────────────────────────────────────────────────────
 .env*
 !.env.example
-
+.env.production
 # ── Testing artifacts ─────────────────────────────────────────────────────────
 /coverage
 /playwright-report

@@ -31,6 +31,7 @@ export default function EditPagePage({
   const router = useRouter();
   const [page, setPage] = useState<PageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -49,27 +50,31 @@ export default function EditPagePage({
 
   useEffect(() => {
     if (!storeId || !pageId) return;
+    let cancelled = false;
     const load = async () => {
       try {
         const pRes = await fetch(`/api/stores/${storeId}/pages/${pageId}`);
         if (pRes.ok) {
           const data: PageData = await pRes.json();
-          setPage(data);
-          setTitle(data.title);
-          setSlug(data.slug);
-          setIsHome(data.isHome);
-          setIsPublished(data.isPublished);
-          setMetaTitle(data.metaTitle ?? "");
-          setMetaDescription(data.metaDescription ?? "");
-        } else {
-          router.push(`/store/${storeId}/pages`);
+          if (!cancelled) {
+            setPage(data);
+            setTitle(data.title);
+            setSlug(data.slug);
+            setIsHome(data.isHome);
+            setIsPublished(data.isPublished);
+            setMetaTitle(data.metaTitle ?? "");
+            setMetaDescription(data.metaDescription ?? "");
+          }
+        } else if (!cancelled) {
+          setFetchError(true);
         }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
     load();
-  }, [storeId, pageId, router]);
+    return () => { cancelled = true; };
+  }, [storeId, pageId]);
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
@@ -124,6 +129,18 @@ export default function EditPagePage({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 mx-auto mb-3 text-red-400" />
+          <p className="text-zinc-900 font-semibold mb-2">Failed to load page</p>
+          <p className="text-sm text-zinc-500">There was an error loading this page. Please try again.</p>
+        </div>
       </div>
     );
   }

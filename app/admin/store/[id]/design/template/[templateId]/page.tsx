@@ -1,14 +1,13 @@
 "use client";
 
 import { use, useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Data } from "@puckeditor/core";
 import {
   ArrowLeft, Save, Check, Globe, Clock,
   Settings, X, Search, Trash2, Plus, ChevronDown,
-  Timer, MousePointer, TrendingUp, LogOut, RefreshCw,
+  Timer, MousePointer, TrendingUp, LogOut, RefreshCw, AlertCircle,
 } from "lucide-react";
 import {
   type TemplateConditions,
@@ -87,11 +86,12 @@ export default function TemplateDesignPage({
   params: Promise<{ id: string; templateId: string }>;
 }) {
   const { id: storeId, templateId } = use(params);
-  const router = useRouter();
   const [template, setTemplate] = useState<TemplateData | null>(null);
   const [templateContent, setTemplateContent] = useState<Data | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const [saved, setSaved] = useState(false);
   // Latest content ref — updated by Puck onChange without causing re-renders
   const latestContent = useRef<Data | null>(null);
@@ -111,11 +111,13 @@ export default function TemplateDesignPage({
 
   useEffect(() => {
     if (!storeId || !templateId) return;
+    let cancelled = false;
     Promise.all([
       fetch(`/api/stores/${storeId}/templates/${templateId}`).then(r => r.json()),
       fetch(`/api/stores/${storeId}/pages?includeUnpublished=true`).then(r => r.json()),
       fetch(`/api/stores/${storeId}/products`).then(r => r.json()),
     ]).then(([tData, pData, prodData]) => {
+      if (cancelled) return;
       setTemplate(tData);
       const initialContent = tData.content || { content: [], root: { props: {} } };
       setTemplateContent(initialContent);
@@ -150,9 +152,10 @@ export default function TemplateDesignPage({
       setProducts(Array.isArray(prodData) ? prodData : (prodData.items ?? []));
       setIsLoading(false);
     }).catch(() => {
-      router.push(`/admin/store/${storeId}/templates`);
+      if (!cancelled) setFetchError(true);
     });
-  }, [storeId, templateId, router]);
+    return () => { cancelled = true; };
+  }, [storeId, templateId, retryKey]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -277,6 +280,32 @@ export default function TemplateDesignPage({
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-zinc-500">Loading template editor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 mx-auto mb-3 text-red-400" />
+          <p className="text-zinc-900 font-semibold mb-2">Failed to load template</p>
+          <p className="text-sm text-zinc-500 mb-4">There was an error loading the editor. Please try again.</p>
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => { setFetchError(false); setIsLoading(true); setRetryKey(k => k + 1); }}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+            >
+              Retry
+            </button>
+            <Link href={`/admin/store/${storeId}/templates`}>
+              <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Templates
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     );

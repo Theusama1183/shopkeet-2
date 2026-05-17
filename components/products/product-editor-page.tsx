@@ -207,6 +207,7 @@ export function ProductEditorPage({ mode, storeId, productId }: ProductEditorPag
 
   const [form, setForm] = useState<FormState>(EMPTY);
   const [isLoading, setIsLoading] = useState(isEdit);
+  const [fetchError, setFetchError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [savedOk, setSavedOk] = useState(false);
@@ -258,9 +259,9 @@ export function ProductEditorPage({ mode, storeId, productId }: ProductEditorPag
         });
         setSlugEdited(!!data.seo_slug);
       })
-      .catch(() => router.push(`/store/${storeId}/products`))
+      .catch(() => setFetchError(true))
       .finally(() => setIsLoading(false));
-  }, [isEdit, productId, storeId, router]);
+  }, [isEdit, productId, storeId]);
 
   const set = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -318,6 +319,18 @@ export function ProductEditorPage({ mode, storeId, productId }: ProductEditorPag
 
   if (isLoading) {
     return <div className="flex h-64 items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-violet-500" /></div>;
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 mx-auto mb-3 text-red-400" />
+          <p className="text-zinc-900 font-semibold mb-2">Failed to load product</p>
+          <p className="text-sm text-zinc-500">There was an error loading this product. Please try again.</p>
+        </div>
+      </div>
+    );
   }
 
   const margin = calcMargin(form.price, form.costPerItem);

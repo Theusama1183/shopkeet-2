@@ -151,7 +151,7 @@ export async function PUT(
     // Save a version snapshot whenever content changes.
     // Uses service role so it works even if RLS is restrictive.
     if (data.content) {
-      const serviceDb = getServiceRoleDatabase();
+      const serviceDb = getServiceRoleDatabase() as any;
       serviceDb
         .from("page_versions")
         .insert({
@@ -161,7 +161,7 @@ export async function PUT(
           title:      updatedPage.title,
           created_by: user.id,
         })
-        .then(({ error: vErr }) => {
+        .then(({ error: vErr }: { error: any }) => {
           if (vErr) console.error("[page_versions] Failed to save version:", vErr);
         });
     }

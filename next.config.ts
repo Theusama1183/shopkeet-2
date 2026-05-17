@@ -9,8 +9,32 @@ const nextConfig: NextConfig = {
   // ── Compression ─────────────────────────────────────────────────────────────
   compress: true,
 
-  // ── Turbopack ───────────────────────────────────────────────────────────────
-  turbopack: {},
+  // ── Webpack (Windows-compatible file watching) ──────────────────────────────
+  // Using webpack (via `next dev --webpack`) because Turbopack's file watcher
+  // causes continuous full-page reloads on Windows. Polling ensures reliable HMR.
+  webpack: (config, { isServer }) => {
+    // Bundle analysis (only when ANALYZE=true)
+    if (process.env.ANALYZE === "true") {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: "static",
+          reportFilename: isServer
+            ? "../analyze/server.html"
+            : "./analyze/client.html",
+          openAnalyzer: false,
+        })
+      );
+    }
+    // Polling file watcher — prevents spurious full-page reloads on Windows
+    config.watchOptions = {
+      poll: 1000,
+      aggregateTimeout: 300,
+      ignored: /node_modules|\.git|\.next/,
+    };
+    return config;
+  },
 
   devIndicators: {
     position: "bottom-right",
@@ -61,28 +85,16 @@ const nextConfig: NextConfig = {
   // This allows /_next/* resources to be loaded from any subdomain
   async rewrites() {
     return {
-      beforeFiles: [],
+      beforeFiles: [
+        // Route /store/* → /admin/store/* so sidebar links work with /store/{id} URLs
+        { source: "/store/:path*", destination: "/admin/store/:path*" },
+        // Admin redirect shortcuts (dashboard → /store/{id}, /onboarding, /list)
+        { source: "/onboarding", destination: "/admin/onboarding" },
+        { source: "/list", destination: "/admin/list" },
+      ],
       afterFiles: [],
       fallback: [],
     };
-  },
-
-  // ── Bundle analysis ──────────────────────────────────────────────────────────
-  webpack: (config, { isServer }) => {
-    if (process.env.ANALYZE === "true") {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: "static",
-          reportFilename: isServer
-            ? "../analyze/server.html"
-            : "./analyze/client.html",
-          openAnalyzer: false,
-        })
-      );
-    }
-    return config;
   },
 
   async headers() {

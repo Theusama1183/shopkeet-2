@@ -38,7 +38,7 @@ export async function GET(
       return NextResponse.json({ error: "Page not found" }, { status: 404 });
     }
 
-    const db = await getDatabase();
+    const db = (await getDatabase()) as any;
     const { data: versions, error: vErr } = await db
       .from("page_versions")
       .select("id, title, created_at, created_by")
@@ -93,7 +93,7 @@ export async function POST(
     }
 
     // Fetch the version content
-    const db = await getDatabase();
+    const db = (await getDatabase()) as any;
     const { data: version, error: vErr } = await db
       .from("page_versions")
       .select("id, content, title")
@@ -116,7 +116,7 @@ export async function POST(
     }
 
     // Save a new version snapshot marking this as a restore
-    const serviceDb = getServiceRoleDatabase();
+    const serviceDb = getServiceRoleDatabase() as any;
     serviceDb
       .from("page_versions")
       .insert({
@@ -126,7 +126,7 @@ export async function POST(
         title:      `${restoredPage.title} (restored)`,
         created_by: user.id,
       })
-      .then(({ error: snapErr }) => {
+      .then(({ error: snapErr }: { error: any }) => {
         if (snapErr) console.error("[page_versions] Failed to save restore snapshot:", snapErr);
       });
 

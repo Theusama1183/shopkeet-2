@@ -77,6 +77,7 @@ export function ProductForm({ storeId, productId, mode }: ProductFormProps) {
   const [activeTab, setActiveTab] = useState<TabId>("basic");
   const [form, setForm] = useState<ProductFormData>(EMPTY_FORM);
   const [isLoading, setIsLoading] = useState(mode === "edit");
+  const [fetchError, setFetchError] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
   const [error, setError] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
@@ -140,9 +141,9 @@ export function ProductForm({ storeId, productId, mode }: ProductFormProps) {
         });
         setSlugEdited(!!data.seoSlug);
       })
-      .catch(() => router.push(`/store/${storeId}/products`))
+      .catch(() => setFetchError(true))
       .finally(() => setIsLoading(false));
-  }, [mode, productId, storeId, router]);
+  }, [mode, productId, storeId]);
 
   // ── Field setter ──────────────────────────────────────────────────────────
 
@@ -248,6 +249,18 @@ export function ProductForm({ storeId, productId, mode }: ProductFormProps) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 mx-auto mb-3 text-red-400" />
+          <p className="text-zinc-900 font-semibold mb-2">Failed to load product</p>
+          <p className="text-sm text-zinc-500">There was an error loading this product. Please try again.</p>
+        </div>
       </div>
     );
   }
