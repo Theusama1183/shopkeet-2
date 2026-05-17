@@ -1,3 +1,5 @@
+"use client";
+
 import { Config, Data } from "@puckeditor/core";
 import { config as defaultConfig } from "./config";
 

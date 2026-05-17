@@ -1,3 +1,5 @@
+"use client";
+
 import { Config } from "@puckeditor/core";
 import type { CustomField } from "@puckeditor/core";
 import DOMPurify from "isomorphic-dompurify";

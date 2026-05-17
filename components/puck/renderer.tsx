@@ -1,9 +1,13 @@
-// Server Component — no "use client" directive.
-// Puck ships a dedicated RSC entry point (@puckeditor/core/rsc) that exports
-// a server-safe Render function. This avoids shipping the full ~180KB Puck
-// editor bundle to the browser on every storefront page load.
+// Client Component — needs "use client" because:
+// 1. The Puck config (lib/puck/config.tsx) imports client-only custom fields
+//    (colorPickerField, etc.) from lib/puck/fields.tsx which has "use client".
+// 2. Puck's Render function needs the full config including render functions
+//    that reference client-side React components.
+// 3. This component acts as the client boundary — the parent server page
+//    fetches data and passes it as a plain serializable prop (Data JSON).
+"use client";
 
-import { Render } from "@puckeditor/core/rsc";
+import { Render } from "@puckeditor/core";
 import type { Data } from "@puckeditor/core";
 import { getLayoutConfig } from "@/lib/puck/layouts";
 import { StoreContextProvider } from "@/lib/puck/store-context";
