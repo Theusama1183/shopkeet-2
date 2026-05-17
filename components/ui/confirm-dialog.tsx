@@ -28,10 +28,9 @@ export function ConfirmDialog({
 
   // Focus the cancel button by default (safer for destructive actions)
   useEffect(() => {
-    if (open) {
-      const timer = setTimeout(() => confirmRef.current?.focus(), 50);
-      return () => clearTimeout(timer);
-    }
+    if (!open) return;
+    const timer = setTimeout(() => confirmRef.current?.focus(), 50);
+    return () => clearTimeout(timer);
   }, [open]);
 
   // Close on Escape

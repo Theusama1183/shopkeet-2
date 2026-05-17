@@ -36,9 +36,7 @@ export const createTemplateSchema = z.object({
     .transform((val) => val.trim().replace(/[<>"'&]/g, "")),
 
   type: z.enum(TEMPLATE_TYPES, {
-    errorMap: () => ({
-      message: `Type must be one of: ${TEMPLATE_TYPES.join(", ")}`,
-    }),
+    message: `Type must be one of: ${TEMPLATE_TYPES.join(", ")}`,
   }),
 });
 
