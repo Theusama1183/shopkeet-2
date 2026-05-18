@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
+// This page calls Supabase — must never be statically prerendered
+export const dynamic = "force-dynamic";
+
 export default async function Overview() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

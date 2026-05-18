@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { LoadingProvider, QueryProvider } from "@/components/providers";
 import { ClientLayoutWrapper } from "./components";
 
+// Calls createClient() which reads cookies — must be dynamic
+export const dynamic = "force-dynamic";
+
 // UUID v4 regex — validates the store ID before hitting the DB
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

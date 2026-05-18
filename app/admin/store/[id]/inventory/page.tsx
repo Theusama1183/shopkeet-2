@@ -3,6 +3,9 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { InventoryTable } from "./inventory-client";
 import { getDatabase } from "@/lib/supabase/database";
 
+// Calls getDatabase() (reads cookies via JWT) — must be dynamic
+export const dynamic = "force-dynamic";
+
 interface InventoryItem {
   id: string;
   product_id: string;

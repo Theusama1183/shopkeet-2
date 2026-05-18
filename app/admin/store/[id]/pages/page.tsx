@@ -3,6 +3,9 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { PagesTable } from "./pages-client";
 import { getDatabase } from "@/lib/supabase/database";
 
+// Calls getDatabase() (reads cookies via JWT) — must be dynamic
+export const dynamic = "force-dynamic";
+
 async function getStore(storeId: string) {
   try {
     const db = await getDatabase();

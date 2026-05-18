@@ -3,6 +3,9 @@ import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LoadingProvider } from "@/components/providers";
 
+// Calls createClient() which reads cookies — must be dynamic
+export const dynamic = "force-dynamic";
+
 export default async function DesignLayout({ 
   children, 
   params 
