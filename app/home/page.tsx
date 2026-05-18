@@ -2,8 +2,12 @@ import { Logo } from "@/components/ui/logo";
 import Link from "next/link";
 import { AnimatedHero } from "./animated-hero";
 import { AnimatedStats, AnimatedFeatures, AnimatedPricing, AnimatedCTA } from "./animated-sections";
+import { getLoginUrl } from "@/lib/auth/redirect";
 
 export default function HomePage() {
+  const loginUrl = getLoginUrl("/login");
+  const signupUrl = getLoginUrl("/signup");
+
   return (
     <div className="min-h-screen bg-white font-body">
       {/* Nav */}
@@ -17,13 +21,13 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href={`${process.env.NODE_ENV === "production" ? "https" : "http"}://auth.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "lvh.me:3000"}/login`}
+              href={loginUrl}
               className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors px-4 py-2"
             >
               Sign in
             </Link>
             <Link
-              href={`${process.env.NODE_ENV === "production" ? "https" : "http"}://auth.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "lvh.me:3000"}/signup`}
+              href={signupUrl}
               className="text-sm bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
             >
               Get Started

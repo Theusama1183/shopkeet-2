@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useUpdateStore } from "@/lib/queries";
 import { useNotification } from "@/lib/stores";
+import { getStorefrontUrl } from "@/lib/auth/redirect";
 
 interface StoreData {
   id: string;
@@ -163,9 +164,13 @@ export function SettingsClient({ store: initialStore }: SettingsClientProps) {
             <h2 className="font-semibold text-zinc-900">Subdomain</h2>
             <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
               <span className="text-sm font-mono text-zinc-900">{store.subdomain}</span>
-              <span className="text-sm text-zinc-400">.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || "shopkeet.com"}</span>
+              <span className="text-sm text-zinc-400">
+                {process.env.NEXT_PUBLIC_SINGLE_DOMAIN === "true"
+                  ? `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "shopkeet.vercel.app"}`
+                  : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "shopkeet.com"}`}
+              </span>
               <a
-                href={`http://${store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "lvh.me:3000"}`}
+                href={getStorefrontUrl(store.subdomain)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ml-auto text-violet-500 hover:text-violet-600"

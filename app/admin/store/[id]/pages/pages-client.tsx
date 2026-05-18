@@ -7,6 +7,7 @@ import { Column, FilterField, DataTableProps } from "@/components/ui/data-table"
 import { Plus, Edit, Eye, Trash2, Home, FileText, Palette } from "lucide-react";
 import { usePages, useDeletePage, type Page } from "@/lib/queries";
 import { useNotification } from "@/lib/stores";
+import { getStorefrontUrl } from "@/lib/auth/redirect";
 
 // Dynamic import DataTable
 const DataTable = dynamic(() => import("@/components/ui/data-table").then(m => ({ default: m.DataTable })), {
@@ -156,7 +157,7 @@ export function PagesTable({ store }: { store: Store }) {
             <div className="flex items-center gap-1">
               {page.is_published && (
                 <a
-                  href={`http://${store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${page.slug}`}
+                  href={getStorefrontUrl(store.subdomain, `/${page.slug}`)}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}

@@ -3,7 +3,6 @@ import { getActiveTemplate } from "@/lib/queries/templates.server";
 import { PuckRenderer } from "@/components/puck/renderer";
 import { Store, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
 // This is a server component — it can fetch the not-found template
 export default async function StoreNotFound({
   params,
@@ -65,7 +64,7 @@ export default async function StoreNotFound({
           </p>
         </div>
         <Link
-          href={`http://${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000"}`}
+          href="/"
           className="inline-flex items-center gap-2 px-6 py-3 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition font-medium"
         >
           <ArrowLeft className="w-4 h-4" />

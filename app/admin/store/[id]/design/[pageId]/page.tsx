@@ -183,16 +183,19 @@ function DesignPageContent({ storeId, pageId }: { storeId: string; pageId: strin
     setEditorKey((k) => k + 1);
   }, []);
 
-  // ── Preview URLs ───────────────────────────────────────────────────────────
-  // Live preview — only available when published
+  // ── Preview URLs — respect single-domain vs subdomain mode ──────────────
+  const singleDomain = process.env.NEXT_PUBLIC_SINGLE_DOMAIN === "true";
+
   const livePreviewUrl = page?.store?.subdomain
-    ? `https://${page.store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${page.slug}`
+    ? singleDomain
+      ? `/store/${page.store.subdomain}/${page.slug}`
+      : `https://${page.store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${page.slug}`
     : null;
 
-  // Draft preview — opens the page with a preview token bypassing is_published check
-  // The token is the pageId itself (simple, non-secret — just prevents accidental public access)
   const draftPreviewUrl = page?.store?.subdomain
-    ? `https://${page.store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${page.slug}?preview=${pageId}`
+    ? singleDomain
+      ? `/store/${page.store.subdomain}/${page.slug}?preview=${pageId}`
+      : `https://${page.store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${page.slug}?preview=${pageId}`
     : null;
 
   // ── Loading / error / not found ──────────────────────────────────────────────
@@ -426,7 +429,9 @@ function DesignPageContent({ storeId, pageId }: { storeId: string; pageId: strin
               </p>
               <p className="text-xs text-green-700 truncate">
                 {page?.store?.subdomain
-                  ? `https://${page.store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${page?.slug}`
+                  ? singleDomain
+                    ? `/store/${page.store.subdomain}/${page?.slug}`
+                    : `https://${page.store.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${page?.slug}`
                   : `yourstore.com/${page?.slug}`}
               </p>
               <p className="text-xs text-zinc-500 mt-1 line-clamp-2">

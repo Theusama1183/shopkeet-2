@@ -112,6 +112,10 @@ export default function EditPagePage({
     }
   };
 
+import { getStorefrontUrl } from "@/lib/auth/redirect";
+
+// ...
+
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
@@ -123,7 +127,8 @@ export default function EditPagePage({
     }
   };
 
-  const liveUrl = `http://${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "lvh.me:3000"}`;
+  // Live storefront URL for this page — respects single-domain mode
+  const liveUrl = getStorefrontUrl("", `/${slug}`).replace(/\/\//g, "/");
 
   if (isLoading) {
     return (
