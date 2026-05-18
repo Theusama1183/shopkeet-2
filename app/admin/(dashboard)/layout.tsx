@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getLoginUrl } from "@/lib/auth/redirect";
 
 // Force dynamic rendering to prevent caching issues
 export const dynamic = 'force-dynamic';
@@ -16,9 +17,7 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-    const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
-    return redirect(`${protocol}://auth.${domain}/login`);
+    return redirect(getLoginUrl("/login"));
   }
 
   // Email verification check

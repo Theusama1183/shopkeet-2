@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { getLoginUrl } from "@/lib/auth/redirect";
 
 export const dynamic = 'force-dynamic';
 
@@ -8,9 +9,7 @@ export default async function Overview() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-    const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
-    return redirect(`${protocol}://auth.${domain}/login`);
+    return redirect(getLoginUrl("/login"));
   }
 
   const { data: userStores, error } = await supabase

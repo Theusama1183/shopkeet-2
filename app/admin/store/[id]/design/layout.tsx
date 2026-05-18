@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LoadingProvider } from "@/components/providers";
+import { getLoginUrl } from "@/lib/auth/redirect";
 
 // Calls createClient() which reads cookies — must be dynamic
 export const dynamic = "force-dynamic";
@@ -20,9 +21,7 @@ export default async function DesignLayout({
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-    const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
-    return redirect(`${protocol}://auth.${domain}/login`);
+    return redirect(getLoginUrl("/login"));
   }
 
   // Authorization check: Verify user owns this store using Supabase client

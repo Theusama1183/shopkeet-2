@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LoadingProvider, QueryProvider } from "@/components/providers";
 import { ClientLayoutWrapper } from "./components";
+import { getLoginUrl } from "@/lib/auth/redirect";
 
 // Calls createClient() which reads cookies — must be dynamic
 export const dynamic = "force-dynamic";
@@ -32,9 +33,7 @@ export default async function AdminRootLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-    const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
-    return redirect(`${protocol}://auth.${domain}/login`);
+    return redirect(getLoginUrl("/login"));
   }
 
   // ── Authorization: user must own this store ───────────────────────────────

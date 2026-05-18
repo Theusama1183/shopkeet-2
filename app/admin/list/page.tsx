@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { getLoginUrl } from "@/lib/auth/redirect";
 
 // This page calls Supabase — must never be statically prerendered
 export const dynamic = "force-dynamic";
@@ -11,9 +12,7 @@ export default async function Overview() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-    const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
-    return redirect(`${protocol}://auth.${domain}/login`);
+    return redirect(getLoginUrl("/login"));
   }
 
   // Use Supabase client instead of Drizzle
@@ -36,7 +35,7 @@ export default async function Overview() {
   }
 
   return (
-    <div className="h-screen py-16 px-6 flex flex-col bg-gradient-to-br from-violet-600 via-violet-500 to-purple-600 items-center justify-center relative overflow-hidden">
+    <div className="h-screen py-16 px-6 flex flex-col bg-linear-to-br from-violet-600 via-violet-500 to-purple-600 items-center justify-center relative overflow-hidden">
       <div className="flex items-center justify-between mb-8">
         <div className="text-center">
           <h1 className="text-[48px] text-white font-bold tracking-tight">Select a Workspace</h1>
@@ -44,7 +43,7 @@ export default async function Overview() {
         </div>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-xl divide-y divide-zinc-200 shadow-sm w-[450px]">
+      <div className="bg-white border border-zinc-200 rounded-xl divide-y divide-zinc-200 shadow-sm w-112.5">
         {userStores.map((store) => (
           <Link
             href={`/store/${store.id}`}
