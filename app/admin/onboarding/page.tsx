@@ -145,8 +145,8 @@ function Step1({ formData, setFormData, onNext }: any) {
       
       {/* Right: Preview (Hidden on mobile) */}
       <div className="hidden lg:flex w-1/2 bg-zinc-100 items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(#e4e4e7_1px,transparent_1px)] [background-size:16px_16px] opacity-50" />
-        <Card className="w-[400px] h-[500px] shadow-xl border-slate-200 bg-white relative z-10 flex flex-col">
+        <div className="absolute inset-0 bg-[radial-gradient(#e4e4e7_1px,transparent_1px)] bg-size-[16px_16px] opacity-50" />
+        <Card className="w-100 h-125 shadow-xl border-slate-200 bg-white relative z-10 flex flex-col">
             <div className="h-8 border-b border-slate-100 flex items-center px-4 gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-400"/>
                 <div className="w-3 h-3 rounded-full bg-yellow-400"/>
@@ -267,9 +267,17 @@ function Step3({ formData }: any) {
         setError(res?.error || "Something went wrong. Please try again.");
         setStatus("init");
       } else {
-        const protocol = window.location.protocol;
-        const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
-        window.location.href = `${protocol}//${res.subdomain}.${rootDomain}`;
+        // Redirect to admin dashboard for the new store
+        const singleDomain = process.env.NEXT_PUBLIC_SINGLE_DOMAIN === "true";
+        if (singleDomain) {
+          // In single-domain mode, go to /admin — the dashboard will redirect
+          // to the new store automatically since it's the only store
+          window.location.href = "/admin";
+        } else {
+          const protocol = window.location.protocol;
+          const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+          window.location.href = `${protocol}//admin.${rootDomain}`;
+        }
       }
     };
     sequence().catch((err) => {
@@ -288,7 +296,7 @@ function Step3({ formData }: any) {
   return (
     <motion.div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-zinc-50">
        <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-[500px] h-[500px] bg-violet-500/10 rounded-full blur-[100px] animate-pulse"/>
+            <div className="w-125 h-125 bg-violet-500/10 rounded-full blur-[100px] animate-pulse"/>
        </div>
        
        <div className="z-10 text-center space-y-8">

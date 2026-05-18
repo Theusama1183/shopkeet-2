@@ -201,12 +201,12 @@ export default function SignupPage() {
       </div>
 
       {/* Right: Visual */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-violet-600 via-violet-500 to-purple-600 items-center justify-center relative overflow-hidden">
+      <div className="hidden lg:flex w-1/2 bg-linear-to-br from-violet-600 via-violet-500 to-purple-600 items-center justify-center relative overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-400/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-violet-400/10 rounded-full blur-3xl" />
         </div>
 
         {/* Content */}

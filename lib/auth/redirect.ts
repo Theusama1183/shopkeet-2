@@ -11,12 +11,10 @@ export function getLoginUrl(returnPath = "/login"): string {
   const singleDomain = process.env.NEXT_PUBLIC_SINGLE_DOMAIN === "true";
 
   if (singleDomain) {
-    // Path-based — no cross-origin redirect needed
     const safePath = returnPath.startsWith("/") ? returnPath : `/${returnPath}`;
     return `/auth${safePath}`;
   }
 
-  // Subdomain mode
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
   return `${protocol}://auth.${domain}${returnPath}`;
@@ -27,6 +25,9 @@ export function getLoginUrl(returnPath = "/login"): string {
  *
  * Single-domain mode: /admin/...
  * Subdomain mode:     https://admin.yourdomain.com/...
+ *
+ * NOTE: In single-domain mode, store paths must include /admin prefix:
+ *   getAdminUrl("/store/abc123") → /admin/store/abc123
  */
 export function getAdminUrl(path = "/"): string {
   const singleDomain = process.env.NEXT_PUBLIC_SINGLE_DOMAIN === "true";
@@ -39,6 +40,23 @@ export function getAdminUrl(path = "/"): string {
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
   return `${protocol}://admin.${domain}${safePath}`;
+}
+
+/**
+ * Builds the admin store URL — always uses /admin/store/:id prefix in
+ * single-domain mode, and the root /store/:id path in subdomain mode
+ * (because the admin subdomain already scopes it).
+ */
+export function getAdminStoreUrl(storeId: string, subPath = ""): string {
+  const singleDomain = process.env.NEXT_PUBLIC_SINGLE_DOMAIN === "true";
+  const safeSub = subPath ? (subPath.startsWith("/") ? subPath : `/${subPath}`) : "";
+
+  if (singleDomain) {
+    return `/admin/store/${storeId}${safeSub}`;
+  }
+
+  // In subdomain mode the admin subdomain is already scoped — use /store/:id
+  return `/store/${storeId}${safeSub}`;
 }
 
 /**

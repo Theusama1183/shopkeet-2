@@ -123,7 +123,7 @@ export default function EditPagePage({
     }
   };
 
-  const liveUrl = `http://lvh.me:3000/${slug}`;
+  const liveUrl = `http://${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "lvh.me:3000"}`;
 
   if (isLoading) {
     return (

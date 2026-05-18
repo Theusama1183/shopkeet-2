@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Door Repairs Byron Bay | Sliding, Bi-fold & Screen Doors — byronhandyman.com.au</title>
+<meta name="description" content="Expert door repairs in Byron Bay & Northern Rivers. Sliding doors, bi-fold doors, screen doors — rollers, tracks, locks & more. Fast local service. Free quote — call 0499 615 805.">
+<meta name="keywords" content="door repairs Byron Bay, sliding door repair Byron Bay, screen door repair Byron Bay, bi-fold door repair Northern Rivers, door roller replacement Byron Bay, sliding door track repair">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a18;
+    --ink-mid: #4a4a46;
+    --ink-light: #8a8a84;
+    --ocean: #1e5c6e;
+    --ocean-mid: #2a7d94;
+    --ocean-light: #e4f2f6;
+    --sand: #f5efe4;
+    --sand-dark: #ede4d4;
+    --warm-white: #fdfaf5;
+    --accent: #c4602a;
+    --accent-light: #faeee6;
+    --border: rgba(30,92,110,0.15);
+    --white: #ffffff;
+    --radius: 10px;
+    --radius-lg: 18px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--warm-white);
+    color: var(--ink);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── NAV ─────────────────────────────────────────── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(253,250,245,0.94);
+    backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+    padding: 0 5vw;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 62px;
+  }
+  .nav-brand {
+    display: flex; flex-direction: column; line-height: 1.1;
+  }
+  .nav-brand-name {
+    font-family: 'Fraunces', serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--ocean);
+    letter-spacing: -0.3px;
+  }
+  .nav-brand-sub {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--ink-light);
+  }
+  .nav-phone {
+    font-family: 'Fraunces', serif;
+    font-size: 18px; font-weight: 500;
+    color: var(--ocean);
+    text-decoration: none;
+    letter-spacing: -0.3px;
+    transition: color 0.2s;
+  }
+  .nav-phone:hover { color: var(--accent); }
+
+  /* ── HERO ─────────────────────────────────────────── */
+  .hero {
+    min-height: 92vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    overflow: hidden;
+  }
+  .hero-left {
+    background: var(--sand);
+    padding: 80px 5vw 80px 8vw;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-left::before {
+    content: '';
+    position: absolute; bottom: -80px; left: -80px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(30,92,110,0.06);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 24px;
+  }
+  .eyebrow-line {
+    width: 32px; height: 1.5px;
+    background: var(--ocean-mid);
+  }
+  .eyebrow-text {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--ocean-mid);
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(38px, 5vw, 62px);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.08;
+    letter-spacing: -1.5px;
+    margin-bottom: 22px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--ocean);
+  }
+  .hero-desc {
+    font-size: 17px; font-weight: 300;
+    color: var(--ink-mid);
+    max-width: 420px;
+    margin-bottom: 40px;
+    line-height: 1.7;
+  }
+  .hero-ctas {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn-primary {
+    background: var(--ocean);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 500;
+    padding: 14px 28px;
+    border-radius: 40px;
+    border: none; cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: #174a59; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent;
+    color: var(--ocean);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 500;
+    padding: 13px 28px;
+    border-radius: 40px;
+    border: 1.5px solid var(--ocean);
+    text-decoration: none; cursor: pointer;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-outline:hover { background: var(--ocean-light); }
+
+  /* hero trust pills */
+  .hero-trust {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-top: 36px;
+  }
+  .trust-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--white);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 13px;
+    font-size: 12px; font-weight: 500;
+    color: var(--ink-mid);
+  }
+  .trust-pill-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--ocean-mid);
+    flex-shrink: 0;
+  }
+
+  /* hero right — before/after visual */
+  .hero-right {
+    background: var(--ocean);
+    position: relative;
+    display: flex; flex-direction: column;
+    justify-content: flex-end;
+    padding: 40px;
+    overflow: hidden;
+    min-height: 500px;
+  }
+  .hero-right::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 30px,
+      rgba(255,255,255,0.025) 30px,
+      rgba(255,255,255,0.025) 31px
+    );
+  }
+  /* before/after card */
+  .ba-card {
+    position: relative; z-index: 1;
+    background: rgba(255,255,255,0.1);
+    border: 0.5px solid rgba(255,255,255,0.2);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    backdrop-filter: blur(4px);
+  }
+  .ba-label {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 14px;
+  }
+  .ba-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 18px;
+  }
+  .ba-box {
+    border-radius: var(--radius);
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    position: relative;
+  }
+  .ba-box-inner {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .ba-box.before .ba-box-inner {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.4);
+    border: 1px dashed rgba(255,255,255,0.2);
+  }
+  .ba-box.after .ba-box-inner {
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.7);
+    border: 1px dashed rgba(255,255,255,0.35);
+  }
+  .ba-caption {
+    font-size: 12px; font-weight: 300;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.5;
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* floating stat cards */
+  .stat-float {
+    position: absolute; top: 48px; right: 48px; z-index: 2;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    min-width: 140px;
+  }
+  .stat-num {
+    font-family: 'Fraunces', serif;
+    font-size: 28px; font-weight: 700;
+    color: var(--ocean);
+    line-height: 1; margin-bottom: 3px;
+  }
+  .stat-label {
+    font-size: 11px; font-weight: 500;
+    color: var(--ink-light);
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+
+  /* ── TRUST STRIP ──────────────────────────────────── */
+  .trust-strip {
+    background: var(--ink);
+    padding: 16px 5vw;
+    display: flex; justify-content: center;
+    gap: 36px; flex-wrap: wrap;
+  }
+  .ts-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.5px;
+  }
+  .ts-check {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: rgba(255,255,255,0.8);
+    flex-shrink: 0;
+  }
+
+  /* ── SECTIONS ─────────────────────────────────────── */
+  .section { padding: 80px 5vw; }
+  .section-inner { max-width: 1080px; margin: 0 auto; }
+  .eyebrow {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--ocean-mid);
+    margin-bottom: 12px;
+  }
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .section-intro {
+    font-size: 17px; font-weight: 300;
+    color: var(--ink-mid); max-width: 560px;
+    line-height: 1.7; margin-bottom: 52px;
+  }
+
+  /* ── SERVICES ─────────────────────────────────────── */
+  .services-section { background: var(--sand); }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .service-card {
+    background: var(--white);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 30px 26px;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+  .service-card:hover {
+    border-color: var(--ocean-mid);
+    transform: translateY(-3px);
+  }
+  .service-num {
+    font-family: 'Fraunces', serif;
+    font-size: 12px; font-style: italic;
+    color: var(--ocean-mid); opacity: 0.6;
+    margin-bottom: 14px;
+  }
+  .service-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 21px; font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: -0.4px;
+  }
+  .service-card p {
+    font-size: 14px; font-weight: 300;
+    color: var(--ink-mid); line-height: 1.6;
+  }
+  .service-tags {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 14px;
+  }
+  .service-tag {
+    font-size: 11px; font-weight: 500;
+    color: var(--ocean);
+    background: var(--ocean-light);
+    padding: 3px 10px; border-radius: 20px;
+  }
+
+  /* ── REVIEW ─────────────────────────────────────────── */
+  .review-section { background: var(--ocean); padding: 80px 5vw; }
+  .review-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+  .review-stars {
+    display: flex; justify-content: center; gap: 5px;
+    margin-bottom: 28px;
+  }
+  .star {
+    width: 18px; height: 18px;
+    background: rgba(255,255,255,0.9);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+  .review-quote {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(22px, 3.5vw, 32px);
+    font-weight: 300; font-style: italic;
+    color: var(--white);
+    line-height: 1.45;
+    margin-bottom: 28px;
+    opacity: 0.95;
+  }
+  .review-attr {
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+  }
+  .review-google {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 12px;
+  }
+  .google-g {
+    width: 20px; height: 20px;
+    background: var(--white);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    color: var(--ocean);
+  }
+  .review-google span {
+    font-size: 12px; color: rgba(255,255,255,0.5);
+  }
+
+  /* ── BEFORE / AFTER SECTION ─────────────────────────── */
+  .ba-section { background: var(--warm-white); }
+  .ba-full-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .ba-full-card {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 0.5px solid var(--border);
+  }
+  .ba-full-img {
+    width: 100%;
+    aspect-ratio: 16/10;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 300;
+    color: var(--ink-light);
+    letter-spacing: 0.5px;
+    position: relative;
+  }
+  .ba-full-img.before-img {
+    background: var(--sand-dark);
+  }
+  .ba-full-img.after-img {
+    background: var(--ocean-light);
+  }
+  .ba-badge {
+    position: absolute; top: 14px; left: 14px;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 20px;
+  }
+  .ba-badge.before { background: rgba(74,74,70,0.15); color: var(--ink-mid); }
+  .ba-badge.after { background: var(--ocean); color: var(--white); }
+  .ba-full-caption {
+    padding: 16px 20px;
+    background: var(--white);
+    font-size: 13px; color: var(--ink-mid); font-weight: 300;
+    border-top: 0.5px solid var(--border);
+  }
+  .ba-note {
+    font-size: 13px; color: var(--ink-light);
+    text-align: center; margin-top: 20px;
+    font-style: italic;
+  }
+
+  /* ── AREAS ─────────────────────────────────────────── */
+  .areas-section { background: var(--sand); }
+  .areas-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
+  .area-tag {
+    background: var(--white);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 18px;
+    font-size: 14px; font-weight: 500;
+    color: var(--ink-mid);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .area-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--ocean-mid);
+    flex-shrink: 0;
+  }
+
+  /* ── QUOTE FORM ────────────────────────────────────── */
+  .form-section { background: var(--warm-white); }
+  .form-layout {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 64px; align-items: start;
+  }
+  .form-left {}
+  .form-left h2 { margin-bottom: 14px; }
+  .form-left p {
+    font-size: 16px; font-weight: 300;
+    color: var(--ink-mid); line-height: 1.7;
+    margin-bottom: 32px;
+  }
+  .why-list { display: flex; flex-direction: column; gap: 14px; }
+  .why-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    font-size: 14px; color: var(--ink-mid);
+    line-height: 1.5;
+  }
+  .why-check {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--ocean-light);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+    font-size: 10px; color: var(--ocean);
+    font-weight: 700;
+  }
+  .form-card {
+    background: var(--white);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 36px 32px;
+    box-shadow: 0 12px 48px rgba(30,92,110,0.07);
+  }
+  .form-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 14px; margin-bottom: 14px;
+  }
+  .form-group {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-bottom: 14px;
+  }
+  label {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink-light);
+  }
+  input, select, textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid rgba(30,92,110,0.2);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; color: var(--ink);
+    background: var(--warm-white);
+    transition: border-color 0.2s, background 0.2s;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--ocean-mid);
+    background: var(--white);
+  }
+  textarea { resize: vertical; min-height: 90px; }
+  .form-submit {
+    width: 100%;
+    background: var(--ocean);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px; font-weight: 500;
+    padding: 15px;
+    border: none; border-radius: 40px;
+    cursor: pointer; margin-top: 6px;
+    transition: background 0.2s, transform 0.15s;
+    letter-spacing: 0.2px;
+  }
+  .form-submit:hover { background: #174a59; transform: translateY(-1px); }
+  .form-note {
+    text-align: center; font-size: 12px;
+    color: var(--ink-light); margin-top: 12px;
+  }
+  .or-line {
+    display: flex; align-items: center; gap: 14px;
+    margin: 22px 0;
+  }
+  .or-line::before, .or-line::after {
+    content: ''; flex: 1;
+    height: 0.5px; background: var(--border);
+  }
+  .or-line span { font-size: 12px; color: var(--ink-light); }
+  .call-big {
+    text-align: center; padding: 18px;
+    background: var(--ocean-light);
+    border-radius: 12px;
+  }
+  .call-big p {
+    font-size: 12px; color: var(--ink-mid); margin-bottom: 4px;
+  }
+  .call-big a {
+    font-family: 'Fraunces', serif;
+    font-size: 28px; font-weight: 700;
+    color: var(--ocean);
+    text-decoration: none; letter-spacing: -0.5px;
+  }
+  .call-big a:hover { color: var(--accent); }
+
+  /* ── FOOTER ────────────────────────────────────────── */
+  footer {
+    background: var(--ink);
+    padding: 48px 5vw 32px;
+  }
+  .footer-inner {
+    max-width: 1080px; margin: 0 auto;
+    display: grid; grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px; margin-bottom: 40px;
+  }
+  .footer-brand-name {
+    font-family: 'Fraunces', serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--white); margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+  .footer-brand p {
+    font-size: 13px; font-weight: 300;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.7;
+  }
+  .footer-col h4 {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,0.35); margin-bottom: 16px;
+  }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .footer-col ul li { font-size: 13px; color: rgba(255,255,255,0.55); }
+  .footer-col ul a { color: rgba(255,255,255,0.55); text-decoration: none; }
+  .footer-col ul a:hover { color: var(--white); }
+  .footer-bottom {
+    max-width: 1080px; margin: 0 auto;
+    padding-top: 24px;
+    border-top: 0.5px solid rgba(255,255,255,0.08);
+    display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 10px;
+  }
+  .footer-bottom p { font-size: 12px; color: rgba(255,255,255,0.3); }
+  .footer-bottom a { color: rgba(255,255,255,0.4); text-decoration: none; }
+
+  /* ── RESPONSIVE ────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; min-height: auto; }
+    .hero-right { min-height: 280px; }
+    .stat-float { display: none; }
+    .form-layout { grid-template-columns: 1fr; gap: 40px; }
+    .form-row { grid-template-columns: 1fr; }
+    .ba-full-grid { grid-template-columns: 1fr; }
+    .footer-inner { grid-template-columns: 1fr; gap: 28px; }
+    .footer-bottom { flex-direction: column; text-align: center; }
+    .form-card { padding: 24px 20px; }
+    .hero-left { padding: 56px 6vw; }
+    .section { padding: 60px 5vw; }
+  }
+
+  @media (max-width: 480px) {
+    .trust-strip { gap: 14px; }
+    .hero-ctas { flex-direction: column; align-items: flex-start; }
+    .hero-trust { display: none; }
+  }
+
+  /* ── ANIMATIONS ────────────────────────────────────── */
+  @media (prefers-reduced-motion: no-preference) {
+    .fade-in {
+      opacity: 0; transform: translateY(20px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in:nth-child(1) { animation-delay: 0.1s; }
+    .fade-in:nth-child(2) { animation-delay: 0.2s; }
+    .fade-in:nth-child(3) { animation-delay: 0.3s; }
+    .fade-in:nth-child(4) { animation-delay: 0.4s; }
+    .fade-in:nth-child(5) { animation-delay: 0.5s; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <span class="nav-brand-name">Byron Handyman</span>
+    <span class="nav-brand-sub">Door Repairs Specialists</span>
+  </div>
+  <a href="tel:0499615805" class="nav-phone">0499 615 805</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow fade-in">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">Byron Bay & Northern Rivers</span>
+    </div>
+    <h1 class="fade-in">Northern Rivers<br><em>Sliding Door</em><br>Repairs — Fast,<br>Local, Reliable.</h1>
+    <p class="hero-desc fade-in">Stuck rollers, bent tracks, broken locks, damaged screens. We fix all door types across Byron Bay and the Northern Rivers — usually in a single visit.</p>
+    <div class="hero-ctas fade-in">
+      <a href="#quote" class="btn-primary">Get a Free Quote</a>
+      <a href="tel:0499615805" class="btn-outline">Call 0499 615 805</a>
+    </div>
+    <div class="hero-trust fade-in">
+      <div class="trust-pill"><div class="trust-pill-dot"></div> Free quotes</div>
+      <div class="trust-pill"><div class="trust-pill-dot"></div> Same-week service</div>
+      <div class="trust-pill"><div class="trust-pill-dot"></div> All door types</div>
+      <div class="trust-pill"><div class="trust-pill-dot"></div> Parts on van</div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="stat-float">
+      <div class="stat-card">
+        <div class="stat-num">★ 5.0</div>
+        <div class="stat-label">Google rating</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">1 visit</div>
+        <div class="stat-label">Most jobs fixed</div>
+      </div>
+    </div>
+    <div class="ba-card">
+      <div class="ba-label">Before & after — sliding door repair</div>
+      <div class="ba-grid">
+        <div class="ba-box before">
+          <div class="ba-box-inner">Add photo here</div>
+        </div>
+        <div class="ba-box after">
+          <div class="ba-box-inner">Add photo here</div>
+        </div>
+      </div>
+      <div class="ba-caption">Grinding, stiff sliding door → running perfectly after roller &amp; track service</div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="ts-item"><div class="ts-check">✓</div> Licensed & Insured</div>
+  <div class="ts-item"><div class="ts-check">✓</div> Same-Week Bookings</div>
+  <div class="ts-item"><div class="ts-check">✓</div> Residential & Commercial</div>
+  <div class="ts-item"><div class="ts-check">✓</div> Holiday Rental Specialists</div>
+  <div class="ts-item"><div class="ts-check">✓</div> Done Right Guarantee</div>
+</div>
+
+<!-- SERVICES -->
+<section class="section services-section">
+  <div class="section-inner">
+    <div class="eyebrow">What we fix</div>
+    <h2>Every door problem<br>we solve.</h2>
+    <p class="section-intro">We specialise exclusively in door repairs across Byron Bay and the Northern Rivers. Salt air, humidity, and heavy use take a toll — we fix it all.</p>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-num">01</div>
+        <h3>Sliding door repairs</h3>
+        <p>Grinding, stiff, or completely stuck sliding doors. We replace rollers, repair tracks, and restore smooth operation on all aluminium, timber, and glass sliding doors.</p>
+        <div class="service-tags">
+          <span class="service-tag">Roller replacement</span>
+          <span class="service-tag">Track repair</span>
+          <span class="service-tag">Frame realignment</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">02</div>
+        <h3>Screen door repairs</h3>
+        <p>Torn flyscreen mesh, broken frames, damaged wheels, and faulty latches. We repair and replace sliding screen doors and supply matching mesh for all door colours.</p>
+        <div class="service-tags">
+          <span class="service-tag">Mesh replacement</span>
+          <span class="service-tag">Frame repairs</span>
+          <span class="service-tag">Wheel replacement</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">03</div>
+        <h3>Lock & handle repairs</h3>
+        <p>A faulty lock is a security risk. We replace sliding door locks, handles, latches, and deadbolts on all door types — same-week in most cases.</p>
+        <div class="service-tags">
+          <span class="service-tag">Lock replacement</span>
+          <span class="service-tag">Handle repair</span>
+          <span class="service-tag">Security upgrade</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">04</div>
+        <h3>Bi-fold & stacker doors</h3>
+        <p>Multi-panel bi-fold and stacker door systems require specialist knowledge. We service and repair all mechanisms, hinges, tracks, and locking systems.</p>
+        <div class="service-tags">
+          <span class="service-tag">Bi-fold systems</span>
+          <span class="service-tag">Stacker doors</span>
+          <span class="service-tag">Multi-panel</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">05</div>
+        <h3>Commercial door repairs</h3>
+        <p>Property managers and strata clients across Byron Bay — we service sliding doors in commercial properties, holiday rentals, and multi-unit residential buildings.</p>
+        <div class="service-tags">
+          <span class="service-tag">Strata properties</span>
+          <span class="service-tag">Holiday rentals</span>
+          <span class="service-tag">Commercial</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">06</div>
+        <h3>Wardrobe sliding doors</h3>
+        <p>Internal sliding wardrobe doors that jump the track, grind, or won't close. We repair bypass doors, mirrored panels, and wardrobe door rollers and tracks.</p>
+        <div class="service-tags">
+          <span class="service-tag">Bypass doors</span>
+          <span class="service-tag">Mirrored panels</span>
+          <span class="service-tag">Track repair</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GOOGLE REVIEW -->
+<section class="review-section">
+  <div class="review-inner">
+    <div class="review-stars">
+      <div class="star"></div><div class="star"></div><div class="star"></div>
+      <div class="star"></div><div class="star"></div>
+    </div>
+    <p class="review-quote">"A great job well done — very efficient. I'd recommend them any time. Great workers. Couldn't be more happier with the job on the doors."</p>
+    <div class="review-attr">Verified customer</div>
+    <div class="review-google">
+      <div class="google-g">G</div>
+      <span>5-star Google review — sliding door repair, Northern Rivers NSW</span>
+    </div>
+  </div>
+</section>
+
+<!-- BEFORE / AFTER -->
+<section class="section ba-section">
+  <div class="section-inner">
+    <div class="eyebrow">Our work</div>
+    <h2>Before & after.</h2>
+    <p class="section-intro">Photos from recent sliding door repair jobs across Byron Bay and the Northern Rivers. Upload your own job photos here.</p>
+    <div class="ba-full-grid">
+      <div class="ba-full-card">
+        <div class="ba-full-img before-img">
+          <div class="ba-badge before">Before</div>
+          Add before photo — grinding slider
+        </div>
+        <div class="ba-full-caption">Worn rollers causing grinding and resistance — typical coastal wear on aluminium sliding door</div>
+      </div>
+      <div class="ba-full-card">
+        <div class="ba-full-img after-img">
+          <div class="ba-badge after">After</div>
+          Add after photo — smooth operation
+        </div>
+        <div class="ba-full-caption">New rollers fitted and track cleaned — door now glides smoothly with one finger</div>
+      </div>
+      <div class="ba-full-card">
+        <div class="ba-full-img before-img">
+          <div class="ba-badge before">Before</div>
+          Add before photo — broken screen
+        </div>
+        <div class="ba-full-caption">Torn flyscreen mesh and bent frame on holiday rental property — Byron Bay</div>
+      </div>
+      <div class="ba-full-card">
+        <div class="ba-full-img after-img">
+          <div class="ba-badge after">After</div>
+          Add after photo — replaced screen
+        </div>
+        <div class="ba-full-caption">New mesh and straightened frame — completed same day ahead of guest arrival</div>
+      </div>
+    </div>
+    <p class="ba-note">Replace placeholder boxes above with real job photos. Aim for 4–6 high-quality before/after pairs.</p>
+  </div>
+</section>
+
+<!-- SERVICE AREAS -->
+<section class="section areas-section">
+  <div class="section-inner">
+    <div class="eyebrow">Where we work</div>
+    <h2>Door repairs across<br>Byron Bay & the Northern Rivers.</h2>
+    <p class="section-intro">We travel across the Byron Bay region and Northern Rivers. Not sure if we cover your area? Call us — we'll let you know.</p>
+    <div class="areas-wrap">
+      <div class="area-tag"><div class="area-dot"></div>Byron Bay</div>
+      <div class="area-tag"><div class="area-dot"></div>Bangalow</div>
+      <div class="area-tag"><div class="area-dot"></div>Mullumbimby</div>
+      <div class="area-tag"><div class="area-dot"></div>Brunswick Heads</div>
+      <div class="area-tag"><div class="area-dot"></div>Lennox Head</div>
+      <div class="area-tag"><div class="area-dot"></div>Ballina</div>
+      <div class="area-tag"><div class="area-dot"></div>Ocean Shores</div>
+      <div class="area-tag"><div class="area-dot"></div>Suffolk Park</div>
+      <div class="area-tag"><div class="area-dot"></div>Newrybar</div>
+      <div class="area-tag"><div class="area-dot"></div>Federal</div>
+      <div class="area-tag"><div class="area-dot"></div>Possum Creek</div>
+      <div class="area-tag"><div class="area-dot"></div>Myocum</div>
+      <div class="area-tag"><div class="area-dot"></div>Lismore</div>
+      <div class="area-tag"><div class="area-dot"></div>Northern Rivers region</div>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE FORM -->
+<section class="section form-section" id="quote">
+  <div class="section-inner">
+    <div class="form-layout">
+      <div class="form-left">
+        <div class="eyebrow">Get in touch</div>
+        <h2>Get a free door repair quote.</h2>
+        <p>Tell us about your door problem and we'll get back to you fast — usually same day during business hours. No obligation, upfront pricing.</p>
+        <div class="why-list">
+          <div class="why-item"><div class="why-check">✓</div>Free quotes, no call-out fees</div>
+          <div class="why-item"><div class="why-check">✓</div>Same-week bookings in most cases</div>
+          <div class="why-item"><div class="why-check">✓</div>Parts carried on van — most jobs one visit</div>
+          <div class="why-item"><div class="why-check">✓</div>Licensed, insured, done right guarantee</div>
+          <div class="why-item"><div class="why-check">✓</div>Holiday rental & strata specialists</div>
+        </div>
+      </div>
+      <div>
+        <div class="form-card">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fname">First name</label>
+              <input type="text" id="fname" placeholder="Tom">
+            </div>
+            <div class="form-group">
+              <label for="lname">Last name</label>
+              <input type="text" id="lname" placeholder="Smith">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="phone">Phone number</label>
+              <input type="tel" id="phone" placeholder="0400 000 000">
+            </div>
+            <div class="form-group">
+              <label for="suburb">Suburb</label>
+              <input type="text" id="suburb" placeholder="Byron Bay">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="door-type">Door type</label>
+            <select id="door-type">
+              <option value="">— What type of door? —</option>
+              <option>Sliding door — exterior</option>
+              <option>Screen door</option>
+              <option>Bi-fold door</option>
+              <option>Stacker door</option>
+              <option>Wardrobe sliding door</option>
+              <option>Commercial sliding door</option>
+              <option>Not sure — need inspection</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="problem">What's the problem?</label>
+            <select id="problem">
+              <option value="">— What's happening with the door? —</option>
+              <option>Door is stiff or hard to slide</option>
+              <option>Door makes grinding or scraping noise</option>
+              <option>Door won't stay on track</option>
+              <option>Lock or handle broken</option>
+              <option>Screen mesh torn or damaged</option>
+              <option>Door won't close or latch properly</option>
+              <option>Multiple issues</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="notes">Anything else? (optional)</label>
+            <textarea id="notes" placeholder="e.g. holiday rental, need done before Friday, second floor unit..."></textarea>
+          </div>
+          <button type="button" class="form-submit">Send Quote Request →</button>
+          <p class="form-note">We respond within a few hours on business days. No obligation.</p>
+          <div class="or-line"><span>or call us directly</span></div>
+          <div class="call-big">
+            <p>Speak with us now</p>
+            <a href="tel:0499615805">0499 615 805</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-brand-name">Byron Handyman — Door Repairs</div>
+      <p>byronhandyman.com.au<br>Specialists in sliding door, screen door,<br>bi-fold and stacker door repairs across<br>Byron Bay and the Northern Rivers, NSW.<br><br>Part of North Coast Building & Maintenance<br>TTHRC Family Trust Pty Ltd</p>
+    </div>
+    <div class="footer-col">
+      <h4>Services</h4>
+      <ul>
+        <li>Sliding door repairs</li>
+        <li>Screen door repairs</li>
+        <li>Lock & handle repairs</li>
+        <li>Bi-fold door repairs</li>
+        <li>Stacker door repairs</li>
+        <li>Commercial doors</li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:0499615805">0499 615 805</a></li>
+        <li><a href="#quote">Get a free quote</a></li>
+        <li>Byron Bay, NSW 2481</li>
+        <li>Northern Rivers Region</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 byronhandyman.com.au — North Coast Building & Maintenance</p>
+    <p><a href="https://lismorehandyman.com.au">Lismore & Northern Rivers →</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

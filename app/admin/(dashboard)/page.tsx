@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getLoginUrl } from "@/lib/auth/redirect";
+import { getLoginUrl, getAdminStoreUrl } from "@/lib/auth/redirect";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +27,7 @@ export default async function Overview() {
   }
 
   if (userStores.length === 1) {
-    return redirect(`/store/${userStores[0].id}`);
+    return redirect(getAdminStoreUrl(userStores[0].id));
   }
 
   return redirect(`/list`);

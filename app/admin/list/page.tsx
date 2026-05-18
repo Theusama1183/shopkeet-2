@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { getLoginUrl } from "@/lib/auth/redirect";
+import { getLoginUrl, getAdminStoreUrl } from "@/lib/auth/redirect";
 
 // This page calls Supabase — must never be statically prerendered
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export default async function Overview() {
   }
 
   if (userStores.length === 1) {
-    return redirect(`/store/${userStores[0].id}`);
+    return redirect(getAdminStoreUrl(userStores[0].id));
   }
 
   return (
@@ -46,7 +46,7 @@ export default async function Overview() {
       <div className="bg-white border border-zinc-200 rounded-xl divide-y divide-zinc-200 shadow-sm w-112.5">
         {userStores.map((store) => (
           <Link
-            href={`/store/${store.id}`}
+            href={getAdminStoreUrl(store.id)}
             key={store.id}
             className="flex items-center justify-between p-4 hover:bg-zinc-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
           >

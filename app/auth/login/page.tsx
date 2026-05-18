@@ -9,6 +9,15 @@ import { motion } from "framer-motion";
 import { Loader2, ShoppingBag, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
+// Build admin URL client-side — respects NEXT_PUBLIC_SINGLE_DOMAIN
+function buildAdminUrl(): string {
+  const singleDomain = process.env.NEXT_PUBLIC_SINGLE_DOMAIN === "true";
+  if (singleDomain) return "/admin";
+  const protocol = window.location.protocol;
+  const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+  return `${protocol}//admin.${domain}`;
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,13 +47,7 @@ export default function LoginPage() {
         setError(result.error);
         setLoading(false);
       } else if (result.success) {
-        // Build admin URL dynamically
-        const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-        const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "lvh.me:3000";
-        const adminUrl = `${protocol}://admin.${rootDomain}`;
-        
-        // Use window.location for cross-origin redirect
-        window.location.href = adminUrl;
+        window.location.href = buildAdminUrl();
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
